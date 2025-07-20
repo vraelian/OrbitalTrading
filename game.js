@@ -21,9 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
         FINANCE_HISTORY_LENGTH: 10, 
         DAILY_PRICE_VOLATILITY: 0.035,
         MEAN_REVERSION_STRENGTH: 0.01,
-        LOAN_GARNISHMENT_DAYS: 365,
-        LOAN_GARNISHMENT_PERCENT: 0.02,
-        RANDOM_EVENT_CHANCE: 0.25,
+        LOAN_GARNISHMENT_DAYS: 180,
+        LOAN_GARNISHMENT_PERCENT: 0.14,
+        RANDOM_EVENT_CHANCE: 0.07,
         COMMODITY_MILESTONES: [
             { threshold: 30000, unlockLevel: 2, message: "Your growing reputation has unlocked access to more advanced industrial hardware.<br>New opportunities await." },
             { threshold: 300000, unlockLevel: 3, message: "Word of your success is spreading. High-tech biological and medical markets are now open to you.", unlocksLocation: 'loc_uranus' },
@@ -570,16 +570,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const introTitle = `Captain ${gameState.player.name}`;
         const starterShip = getActiveShip();
-        const introDesc = `<i>The year is 2120. Humanity has expanded throughout the Solar System. Space traders keep distant colonies and stations alive with regular cargo deliveries.</i><br><br>You've borrowed <span class="hl">${formatCredits(CONFIG.STARTING_DEBT)}</span> to acquire a used freighter, the <span class="hl">${starterShip.name}</span>.<br><br>Make the most of it. <span class="hl">Grow your wealth,</span> pay off your debts, and unlock new opportunities at the system's starports.`;
+        const introDesc = `<i>The year is 2120. Humanity has expanded throughout the Solar System. Space traders keep distant colonies and stations alive with regular cargo deliveries.</i><br><br>You've borrowed <span class="hl">${formatCredits(CONFIG.STARTING_DEBT)}</span> to acquire a used C-Class freighter, the <span class="hl">${starterShip.name}</span>.<br><br>Make the most of it! <span class="hl">Grow your wealth,</span> pay off your debts, and unlock new opportunities at the system's starports.`;
         queueModal('event-modal', introTitle, introDesc, () => {
             showTravelView();
-            const navDesc = `This is the navigation interface. Fly to other stations and <i>trade cargo</i> throughout the system.<br><br>Traveling between stations costs <span class='hl-blue pulse-blue-glow'>fuel</span> and causes wear on your vessel's <span class='hl-green pulse-green-glow'>hull</span>. Flying with a poorly maintained ship is <span class="hl-red">dangerous</span>.<br><br>Both can be restored at any station. You are currently docked at Mars.`;
+            const navDesc = `This is the navigational interface. <br>From here you may fly to other stations to <span class="hl">trade cargo</span> throughout the system.<br><br>Traveling between stations consumes <span class='hl-blue pulse-blue-glow'>fuel</span> and  wears down your vessel's <span class='hl-green pulse-green-glow'>hull</span>. Both can be restored at any station. Flying with a poorly maintained ship is <span class="hl-red">dangerous</span>. <br><br>You are currently docked at <span class="hl">Mars</span>.`;
             tutorialTimeout = setTimeout(() => {
                 if (document.getElementById('travel-view').style.display !== 'none' && !gameState.tutorials.navigation) {
                     queueModal('tutorial-modal', 'Navigation', navDesc, () => { gameState.tutorials.navigation = true; }, { tutorialType: 'navigation', buttonText: 'Plot a Course!' });
                 }
             }, 2000);
-        }, { buttonText: "Enter " + starterShip.name, buttonClass: "btn-pulse" });
+        }, { buttonText: "Embark on the " + starterShip.name, buttonClass: "btn-pulse" });
     }
 
     function travelTo(locationId) {
@@ -1024,12 +1024,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const garnishedAmount = Math.floor(gameState.player.credits * CONFIG.LOAN_GARNISHMENT_PERCENT);
             if (garnishedAmount > 0) {
                 gameState.player.credits -= garnishedAmount;
-                showGarnishmentToast(`2% of credits garnished for debt: -${formatCredits(garnishedAmount, false)}`);
+                showGarnishmentToast(`7% of credits garnished for debt: -${formatCredits(garnishedAmount, false)}`);
                 recordFinanceTransaction('debt', -garnishedAmount);
             }
 
             if (!gameState.player.seenGarnishmentWarning) {
-                const msg = "Your loan has been delinquent for over a year. Your lender is now garnishing 2% of your total credits every week until the debt is paid in full.";
+                const msg = "Your loan has been delinquent for over a year. Your lender is now garnishing 7% of your total credits every week until the debt is paid in full.";
                 queueModal('event-modal', "Credit Garnishment Notice", msg, null, { buttonText: 'Understood', buttonClass: 'bg-red-800/80' });
                 gameState.player.seenGarnishmentWarning = true;
             }
@@ -1773,7 +1773,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function triggerMarketTutorial() {
-         const tutorialDesc = `Each station has unique <span class='hl'>supplies and demands</span> of cargo.<br><br><span class='hl-green'>Profit</span> by buying cargo at a low price, traveling to another station, and selling the cargo for more than your original cost.<br><br>Use Market <span class='hl'>(MKT)</span> info to find a good deal, and Profit/Loss <span class='hl'>(P/L)</span> info to track your potential profit against what you originally paid.`;
+         const tutorialDesc = `Each station has unique <span class='hl'>supplies and demands</span> of cargo.<br><br><span class='hl-green'>Profit</span> by buying cargo at a low price, traveling to different stations, and <span class='hl-green'>selling the cargo for more than your original cost</span>.<br><br>Use Market <span class='hl'>(MKT)</span> info to find a good deal, and Profit/Loss <span class='hl'>(P/L)</span> info to track your potential profit against what you originally paid.`;
          tutorialTimeout = setTimeout(() => {
             queueModal('tutorial-modal', 'The Market', tutorialDesc, () => { gameState.tutorials.market = true; }, { tutorialType: 'market', buttonText: 'Buy low, Sell high', buttonClass: 'btn-pulse-green' });
         }, 1500);
