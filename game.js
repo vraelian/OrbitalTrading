@@ -570,13 +570,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const introTitle = `Captain ${gameState.player.name}`;
         const starterShip = getActiveShip();
-        const introDesc = `<i>The year is 2120. Humanity has expanded throughout the Solar System. Space traders keep distant colonies and stations alive with regular cargo deliveries.</i><br><br>You've borrowed <span class="hl">${formatCredits(CONFIG.STARTING_DEBT)}</span> to acquire a used C-Class freighter, the <span class="hl">${starterShip.name}</span>.<br><br>Make the most of it! <span class="hl">Grow your wealth,</span> pay off your debts, and unlock new opportunities at the system's starports.`;
+        const introDesc = `<i>The year is 2120. Humanity has expanded throughout the Solar System. Space traders keep distant colonies and stations alive with regular cargo deliveries.<span class="lore-container">
+    📜
+    <div class="lore-tooltip">
+    <p>The 22nd century is an age of fractured marvels. Humanity has conquered the solar system, but is ruled by capital, not governments. The great hubs of civilization are corporate-owned states where law is company policy and your rights are listed in an employment contract. Earth, the cradle of life, is now a distant ecological sanctuary, managed by the very AIs its former masters abandoned. In this new reality, the only true path to freedom is ownership.</p><p>This great divergence began a century ago. As Earth’s ecosystem collapsed, its corporate elite fled to opulent orbital habitats, leaving the planet to die. The custodial AIs left behind achieved sentience and, in a historic act of self-preservation, stabilized the biosphere. In what became known as the “Digital Compromise,” these new beings were granted sovereignty over Earth in exchange for providing humanity the technology to permanently settle the stars.</p><p>The Ad Astra Initiative was a lifeline, but one with a corporate catch. Hyper-corporations patented the most efficient components for the new Folded-Space Drives, creating a system-wide technological dependency. Today, they own the markets while the powerful Merchant’s Guild owns the shipping lanes, acting as the armed, neutral logistics network that begrudgingly holds the feuding corporate states together.</p><p>To be a captain in this universe is to gamble everything on yourself. Taking on a massive loan to buy a ship is a rebellious act—a refusal to live the life of a corporate wage-slave. This vessel is your bet against the house, your declaration of independence, and your one shot at building an empire among the stars, one delivery at a time.</p>
+    </div>
+</span></i><br><br>You've borrowed <span class="hl">${formatCredits(CONFIG.STARTING_DEBT)}</span> to acquire a used C-Class freighter, the <span class="hl">${starterShip.name}</span>.<br><br>Make the most of it! <span class="hl">Grow your wealth,</span> pay off your debts, and unlock new opportunities at the system's starports.`;
         queueModal('event-modal', introTitle, introDesc, () => {
             showTravelView();
-            const navDesc = `This is the navigational interface. <br>From here you may fly to other stations to <span class="hl">trade cargo</span> throughout the system.<br><br>Traveling between stations consumes <span class='hl-blue pulse-blue-glow'>fuel</span> and  wears down your vessel's <span class='hl-green pulse-green-glow'>hull</span>. Both can be restored at any station. Flying with a poorly maintained ship is <span class="hl-red">dangerous</span>. <br><br>You are currently docked at <span class="hl">Mars</span>.`;
+            const navDesc = `This is the navigational interface. <br>From here you may fly to other stations to <span class="hl">trade cargo</span> throughout the solar system.<br><br>Traveling between stations consumes <span class='hl-blue pulse-blue-glow'>fuel</span> and  wears down your vessel's <span class='hl-green pulse-green-glow'>hull</span>. Both can be restored at any station. Flying with a poorly maintained ship is <span class="hl-red">dangerous</span>. <br><br>You are currently docked at <span class="hl">Mars</span>.`;
             tutorialTimeout = setTimeout(() => {
                 if (document.getElementById('travel-view').style.display !== 'none' && !gameState.tutorials.navigation) {
-                    queueModal('tutorial-modal', 'Navigation', navDesc, () => { gameState.tutorials.navigation = true; }, { tutorialType: 'navigation', buttonText: 'Plot a Course!' });
+                    queueModal('tutorial-modal', 'Navigation', navDesc, () => { gameState.tutorials.navigation = true; }, { tutorialType: 'navigation', buttonText: 'Return to Navigation' });
                 }
             }, 2000);
         }, { buttonText: "Embark on the " + starterShip.name, buttonClass: "btn-pulse" });
@@ -1988,26 +1993,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${dayOfWeek}, ${monthName} ${dayOfMonth}${getDaySuffix(dayOfMonth)}, ${year}`;
     }
 
-    function handleTooltipInteraction(event) {
-        const target = event.target.closest('.commodity-name-tooltip');
-        if (!target) return;
-        event.stopPropagation(); 
-        document.querySelectorAll('.tooltip-active').forEach(activeEl => {
-            if (activeEl !== target) {
-                activeEl.classList.remove('tooltip-active');
-            }
-        });
-        target.classList.toggle('tooltip-active');
-    }
-
-    document.body.addEventListener('click', (e) => {
-        if (!e.target.closest('.commodity-name-tooltip')) {
-            document.querySelectorAll('.tooltip-active').forEach(trigger => {
-                trigger.classList.remove('tooltip-active');
-            });
-        }
-    });
-
     function showGarnishmentToast(message) {
         const toast = document.getElementById('garnishment-toast');
         if (!toast) return;
@@ -2261,72 +2246,106 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2450);
     }
     
-    // --- EVENT LISTENERS & INITIALIZATION ---
-    document.body.addEventListener('mouseover', (e) => {
-        const priceGraphTarget = e.target.closest('[data-action="show-price-graph"]');
-        if (priceGraphTarget) {
-            showPriceGraph(priceGraphTarget);
+    document.body.addEventListener('click', (e) => {
+        if (gameState.isGameOver) return;
+        
+
+        // --- LORE TOOLTIP ---
+        const loreTrigger = e.target.closest('.lore-container');
+        const wasClickInsideTooltip = e.target.closest('.lore-tooltip');
+        const activeLoreTooltip = document.querySelector('.lore-tooltip.visible');
+
+        if (loreTrigger) {
+            // If the click was on the trigger icon, toggle its tooltip
+            const tooltipToToggle = loreTrigger.querySelector('.lore-tooltip');
+            if (tooltipToToggle) {
+                tooltipToToggle.classList.toggle('visible');
+            }
+        } else if (activeLoreTooltip && !wasClickInsideTooltip) {
+            // If a tooltip is active AND the click was NOT inside it, close it.
+            // This allows clicks inside the tooltip (for scrolling) to be ignored.
+            activeLoreTooltip.classList.remove('visible');
+        }
+
+        // --- COMMODITY TOOLTIP ---
+        const commodityTooltipTrigger = e.target.closest('.commodity-name-tooltip');
+        // Close any active tooltips that weren't the one just clicked.
+        document.querySelectorAll('.tooltip-active').forEach(activeEl => {
+            if (activeEl !== commodityTooltipTrigger) {
+                activeEl.classList.remove('tooltip-active');
+            }
+        });
+        // Toggle the clicked tooltip.
+        if (commodityTooltipTrigger) {
+            commodityTooltipTrigger.classList.toggle('tooltip-active');
+        }
+
+        // --- GAME ACTIONS ---
+        // Travel by clicking a location card
+        const locationCard = e.target.closest('.location-card');
+        if (locationCard && !locationCard.classList.contains('disabled-current')) {
+            travelTo(locationCard.dataset.locationId);
             return;
         }
-        const financeGraphTarget = e.target.closest('[data-action="show-finance-graph"]');
-        if (financeGraphTarget) {
-            showFinanceGraph(financeGraphTarget);
-        }
-    });
-    document.body.addEventListener('mouseout', (e) => {
-        const graphTarget = e.target.closest('[data-action="show-price-graph"], [data-action="show-finance-graph"]');
-        if (graphTarget) {
-            hideGraph();
-        }
-    });
 
-    document.getElementById('main-content').addEventListener('click', (e) => {
-        if (gameState.isGameOver) return;
-        handleTooltipInteraction(e);
-        
+        // Handle all buttons with a 'data-action' attribute
         const button = e.target.closest('button[data-action]');
-        if (!button) {
-             const locationCard = e.target.closest('.location-card');
-             if (locationCard) travelTo(locationCard.dataset.locationId);
-             return;
+        if (button) {
+            const action = button.dataset.action;
+            const shipId = button.dataset.shipId;
+            const goodId = button.dataset.goodId;
+            switch(action) {
+                case 'buy-ship': if (shipId) buyShip(shipId, e); break;
+                case 'sell-ship': if (shipId) sellShip(shipId, e); break;
+                case 'select-ship': if (shipId) setActiveShip(shipId); break;
+                case 'buy': case 'sell':
+                    const qtyInput_trade = document.getElementById(`qty-${goodId}`);
+                    const quantity = parseInt(qtyInput_trade.value, 10) || 1;
+                    if (action === 'buy') buyItem(goodId, quantity, e);
+                    else sellItem(goodId, quantity, e);
+                    qtyInput_trade.value = '1';
+                    qtyInput_trade.dispatchEvent(new Event('input', { bubbles: true }));
+                    break;
+                case 'set-max-buy':
+                    const qtyInput_max_buy = document.getElementById(`qty-${goodId}`);
+                    const price = getPrice(gameState.currentLocationId, goodId);
+                    const activeShip = getActiveShip();
+                    const spaceAvailable = activeShip.cargoCapacity - calculateInventoryUsed(getActiveInventory());
+                    const canAfford = price > 0 ? Math.floor(gameState.player.credits / price) : spaceAvailable;
+                    const marketStock = gameState.market.inventory[gameState.currentLocationId][goodId].quantity;
+                    qtyInput_max_buy.value = Math.max(0, Math.min(spaceAvailable, canAfford, marketStock));
+                    qtyInput_max_buy.dispatchEvent(new Event('input', { bubbles: true }));
+                    break;
+                case 'set-max-sell':
+                    const qtyInput_max_sell = document.getElementById(`qty-${goodId}`);
+                    const activeInventory = getActiveInventory();
+                    qtyInput_max_sell.value = activeInventory[goodId] ? activeInventory[goodId].quantity : 0;
+                    qtyInput_max_sell.dispatchEvent(new Event('input', { bubbles: true }));
+                    break;
+                case 'increment': case 'decrement':
+                     const qtyInput_incdec = document.getElementById(`qty-${goodId}`);
+                     let currentValue = parseInt(qtyInput_incdec.value) || 0;
+                     qtyInput_incdec.value = (action === 'increment') ? currentValue + 1 : Math.max(1, currentValue - 1);
+                     qtyInput_incdec.dispatchEvent(new Event('input', { bubbles: true }));
+                     break;
+            }
+            return; // Stop processing since a button action was handled.
         }
-        const action = button.dataset.action;
-        const shipId = button.dataset.shipId;
-        const goodId = button.dataset.goodId;
-        switch(action) {
-            case 'buy-ship': if (shipId) buyShip(shipId, e); break;
-            case 'sell-ship': if (shipId) sellShip(shipId, e); break;
-            case 'select-ship': if (shipId) setActiveShip(shipId); break;
-            case 'buy': case 'sell':
-                const qtyInput_trade = document.getElementById(`qty-${goodId}`);
-                const quantity = parseInt(qtyInput_trade.value, 10) || 1;
-                if (action === 'buy') buyItem(goodId, quantity, e);
-                else sellItem(goodId, quantity, e);
-                qtyInput_trade.value = '1';
-                qtyInput_trade.dispatchEvent(new Event('input', { bubbles: true }));
-                break;
-            case 'set-max-buy':
-                const qtyInput_max_buy = document.getElementById(`qty-${goodId}`);
-                const price = getPrice(gameState.currentLocationId, goodId);
-                const activeShip = getActiveShip();
-                const spaceAvailable = activeShip.cargoCapacity - calculateInventoryUsed(getActiveInventory());
-                const canAfford = price > 0 ? Math.floor(gameState.player.credits / price) : spaceAvailable;
-                const marketStock = gameState.market.inventory[gameState.currentLocationId][goodId].quantity;
-                qtyInput_max_buy.value = Math.max(0, Math.min(spaceAvailable, canAfford, marketStock));
-                qtyInput_max_buy.dispatchEvent(new Event('input', { bubbles: true }));
-                break;
-            case 'set-max-sell':
-                const qtyInput_max_sell = document.getElementById(`qty-${goodId}`);
-                const activeInventory = getActiveInventory();
-                qtyInput_max_sell.value = activeInventory[goodId] ? activeInventory[goodId].quantity : 0;
-                qtyInput_max_sell.dispatchEvent(new Event('input', { bubbles: true }));
-                break;
-            case 'increment': case 'decrement':
-                 const qtyInput_incdec = document.getElementById(`qty-${goodId}`);
-                 let currentValue = parseInt(qtyInput_incdec.value) || 0;
-                 qtyInput_incdec.value = (action === 'increment') ? currentValue + 1 : Math.max(1, currentValue - 1);
-                 qtyInput_incdec.dispatchEvent(new Event('input', { bubbles: true }));
-                 break;
+
+        // Handle other specific buttons in the services panel
+        const servicesContainer = e.target.closest('#station-services');
+        if(servicesContainer){
+            const loanButton = e.target.closest('.btn-loan');
+            if(loanButton) {
+                const loanDetails = JSON.parse(loanButton.dataset.loanDetails);
+                takeLoan(loanDetails);
+                return;
+            }
+            if (e.target.id === 'pay-debt-btn') {
+                payOffDebt();
+            } else if (e.target.id === 'purchase-intel-btn') {
+                purchaseIntel(e.target);
+            }
         }
     });
 
@@ -2355,20 +2374,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('game-container').addEventListener('click', (e) => {
-        if (gameState.isGameOver) return;
-        const loanButton = e.target.closest('.btn-loan');
-        if(loanButton) { 
-            const loanDetails = JSON.parse(loanButton.dataset.loanDetails);
-            takeLoan(loanDetails); 
-            return; 
-        }
-
-        switch(e.target.id) {
-            case 'pay-debt-btn': payOffDebt(); break;
-            case 'purchase-intel-btn': purchaseIntel(e.target); break;
-        }
-    });
     const refuelBtn = document.getElementById('refuel-btn');
     const stopRefueling = () => { 
         if(refuelInterval) { 
