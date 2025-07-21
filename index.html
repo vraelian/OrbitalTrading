@@ -3,13 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Orbital Trading v17.3</title>
+    <title>Orbital Trading v17.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&family=Orbitron:wght@500;700&family=Roboto+Mono:wght@400;700&family=Aldrich&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body class="p-4 md:p-8">
 
+    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-8 text-center bg-[#0c101d]">
+        <div class="max-w-3xl w-full panel-border border border-slate-700 bg-black/30 p-8 md:p-12 rounded-lg btn-pulse">
+            <h1 class="text-6xl md:text-7xl font-orbitron font-bold text-cyan-300 mb-2">Orbital Trading</h1>
+            <p class="text-xl md:text-2xl text-gray-400 mb-16"><span class="hl">A game of heliocentric adventure & arbitrage</span></p>
+            
+            <div class="flex flex-col items-center gap-4 w-full max-w-sm mx-auto">
+                <button id="start-game-btn" class="btn btn-header btn-pulse w-full">Start Game</button>
+                <button class="btn btn-header w-full" disabled>Placeholder 1</button>
+                <button class="btn btn-header w-full" disabled>Placeholder 2</button>
+            </div>
+        </div>
+
+        <footer class="absolute bottom-4 text-center text-slate-500 text-sm w-full">
+            <p id="version-display">Version 17.4</p>
+            <a href="https://forms.gle/your-feedback-form-link" target="_blank" class="hover:text-cyan-300 transition-colors">Submit Playtesting Feedback</a>
+            <p class="mt-1">Designed by Devon C.</p>
+        </footer>
+    </div>
     <!-- Toasts and Notifications -->
     <div id="save-toast" class="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-cyan-500/80 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 pointer-events-none z-50">Checkpoint Saved</div>
     <div id="garnishment-toast" class="hidden fixed top-5 left-1/2 -translate-x-1/2 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 pointer-events-none z-50"></div>
@@ -20,7 +38,7 @@
     </div>
 
     <!-- Main Game Container -->
-    <div id="game-container" class="game-container p-4 md:p-8">
+    <main id="game-container" class="game-container p-4 md:p-8 hidden">
         <header id="header-main" class="relative flex justify-between items-center mb-6 pb-4 border-b-2 border-cyan-900/50">
             <div class="text-left">
                 <h1 id="header-title" class="text-4xl md:text-5xl font-orbitron font-bold text-cyan-300"></h1>
@@ -142,7 +160,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- Modals -->
     <div id="travel-animation-modal" class="modal-backdrop hidden">
@@ -165,14 +183,14 @@
         </div>
     </div>
 
-    <div id="name-modal" class="modal-backdrop hidden">
+    <dialog id="name-modal" class="modal-backdrop hidden">
         <div class="modal-content">
-            <h3 class="text-2xl font-orbitron mb-4 text-cyan-300">Orbital Trading</h3>
-            <p class="mb-4 text-lg">What is your name, Spacer?</p>
-            <input type="text" id="player-name-input" maxlength="18" class="w-full p-2 rounded bg-slate-900 border border-slate-600 text-center text-lg mb-4" placeholder="Enter name...">
+            <h3 class="text-2xl font-orbitron mb-4 text-cyan-300">Welcome to the Solar System</h3>
+            <p class="mb-4 text-lg text-gray-300"><span class="hl">What is your name, Spacer?</span></p>
+            <input type="text" id="player-name-input" maxlength="18" class="w-full p-2 rounded bg-slate-900 border border-slate-600 text-center text-lg mb-4 text-gray-200" placeholder="Enter name...">
             <div id="name-modal-buttons" class="mt-4 flex flex-col sm:flex-row justify-center items-center gap-4"></div>
         </div>
-    </div>
+    </dialog>
 
     <div id="event-modal" class="modal-backdrop hidden">
         <div class="modal-content">

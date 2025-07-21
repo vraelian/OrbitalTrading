@@ -595,3 +595,37 @@ body {
         line-height: 22px;
     }
 }
+
+.lore-container {
+    position: relative;
+    cursor: help;
+    border: 1px dashed rgba(209, 213, 219, 0.4);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.lore-tooltip {
+    display: none; /* Hidden by default */
+    position: absolute;
+    bottom: 105%; /* Position above the trigger paragraph */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 450px;
+    background-color: #0c101d;
+    border: 1px solid #3a4a6a;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.9rem; /* Small, readable font */
+    line-height: 1.4;
+    color: #d0d8e8;
+    z-index: 60; /* Ensure it's above other modal content */
+    box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    text-align: left;
+}
+
+.lore-tooltip.visible {
+    display: block; /* Class to make it visible */
+}

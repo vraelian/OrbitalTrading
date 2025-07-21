@@ -484,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirmButton = document.createElement('button');
         confirmButton.id = 'confirm-name-button';
         confirmButton.className = 'btn px-6 py-2 w-full sm:w-auto';
-        confirmButton.textContent = 'Begin New Game';
+        confirmButton.textContent = 'Confirm';
         confirmButton.onclick = () => {
             const playerName = nameInput.value.trim() || 'Captain';
             modal.classList.add('hidden');
@@ -1948,6 +1948,7 @@ document.addEventListener('DOMContentLoaded', () => {
             wrappedCallback();
         };
         
+        if (options.onShow) options.onShow();
         modal.classList.remove('hidden');
         modal.classList.add('modal-visible');
     }
@@ -2603,8 +2604,25 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI();
     }
 
+    function initializeGame() {
+        const splashScreen = document.getElementById('splash-screen');
+        const gameContainer = document.getElementById('game-container');
+
+        // Hide the splash screen
+        splashScreen.classList.add('modal-hiding');
+        splashScreen.addEventListener('animationend', () => {
+            splashScreen.style.display = 'none';
+
+            // Show the main game container
+            gameContainer.classList.remove('hidden');
+
+            // Show the name prompt
+            showNamePrompt();
+        }, { once: true });
+    }
+
     function main() {
-        showNamePrompt();
+        document.getElementById('start-game-btn').addEventListener('click', initializeGame);
     }
 
     main();
