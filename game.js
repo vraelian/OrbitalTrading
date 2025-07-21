@@ -573,9 +573,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const introDesc = `<i>The year is 2120. Humanity has expanded throughout the Solar System. Space traders keep distant colonies and stations alive with regular cargo deliveries.<span class="lore-container">
     📜
     <div class="lore-tooltip">
-    <p>The 22nd century is an age of fractured marvels. Humanity has conquered the solar system, but is ruled by capital, not governments. The great hubs of civilization are corporate-owned states where law is company policy and your rights are listed in an employment contract. Earth, the cradle of life, is now a distant ecological sanctuary, managed by the very AIs its former masters abandoned. In this new reality, the only true path to freedom is ownership.</p><p>This great divergence began a century ago. As Earth’s ecosystem collapsed, its corporate elite fled to opulent orbital habitats, leaving the planet to die. The custodial AIs left behind achieved sentience and, in a historic act of self-preservation, stabilized the biosphere. In what became known as the “Digital Compromise,” these new beings were granted sovereignty over Earth in exchange for providing humanity the technology to permanently settle the stars.</p><p>The Ad Astra Initiative was a lifeline, but one with a corporate catch. Hyper-corporations patented the most efficient components for the new Folded-Space Drives, creating a system-wide technological dependency. Today, they own the markets while the powerful Merchant’s Guild owns the shipping lanes, acting as the armed, neutral logistics network that begrudgingly holds the feuding corporate states together.</p><p>To be a captain in this universe is to gamble everything on yourself. Taking on a massive loan to buy a ship is a rebellious act—a refusal to live the life of a corporate wage-slave. This vessel is your bet against the house, your declaration of independence, and your one shot at building an empire among the stars, one delivery at a time.</p>
+    <p>The 22nd century is an age of fractured marvels. Humanity has conquered the solar system, but is ruled by capital, not governments. The great hubs of civilization are corporate-owned states where law is company policy and your rights are listed in an employment contract. Earth, the cradle of life, is now a distant ecological sanctuary, managed by the very AIs its former masters abandoned. In this new reality, the only true path to freedom is ownership.</p><br><p>This great divergence began a century ago. As Earth’s ecosystem collapsed, its corporate elite fled to opulent orbital habitats, leaving the planet to die. The custodial AIs left behind achieved sentience and, in a historic act of self-preservation, stabilized the biosphere. In what became known as the “Digital Compromise,” these new beings were granted sovereignty over Earth in exchange for providing humanity the technology to permanently settle the stars.</p><br><p>The Ad Astra Initiative was a lifeline, but one with a corporate catch. Hyper-corporations patented the most efficient components for the new Folded-Space Drives, creating a system-wide technological dependency. Today, they own the markets while the powerful Merchant’s Guild owns the shipping lanes, acting as the armed, neutral logistics network that begrudgingly holds the feuding corporate states together.</p><br><p>To be a captain in this universe is to gamble everything on yourself.</p>
     </div>
-</span></i><br><br>You've borrowed <span class="hl">${formatCredits(CONFIG.STARTING_DEBT)}</span> to acquire a used C-Class freighter, the <span class="hl">${starterShip.name}</span>.<br><br>Make the most of it! <span class="hl">Grow your wealth,</span> pay off your debts, and unlock new opportunities at the system's starports.`;
+</span></i><br><br>You've borrowed <span class="hl-blue">⌬ ${CONFIG.STARTING_DEBT.toLocaleString()} Credits</span> to acquire a used C-Class freighter, the <span class="hl">${starterShip.name}</span>.<br><br>Make the most of it! <span class="hl">Grow your wealth,</span> pay off your <span class="hl-red">debts,</span> and unlock new opportunities at the system's starports.`;
         queueModal('event-modal', introTitle, introDesc, () => {
             showTravelView();
             const navDesc = `This is the navigational interface. <br>From here you may fly to other stations to <span class="hl">trade cargo</span> throughout the solar system.<br><br>Traveling between stations consumes <span class='hl-blue pulse-blue-glow'>fuel</span> and  wears down your vessel's <span class='hl-green pulse-green-glow'>hull</span>. Both can be restored at any station. Flying with a poorly maintained ship is <span class="hl-red">dangerous</span>. <br><br>You are currently docked at <span class="hl">Mars</span>.`;
@@ -2346,6 +2346,26 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (e.target.id === 'purchase-intel-btn') {
                 purchaseIntel(e.target);
             }
+        }
+    });
+
+    // --- EVENT LISTENERS & INITIALIZATION ---
+    document.body.addEventListener('mouseover', (e) => {
+        const priceGraphTarget = e.target.closest('[data-action="show-price-graph"]');
+        if (priceGraphTarget) {
+            showPriceGraph(priceGraphTarget);
+            return;
+        }
+        const financeGraphTarget = e.target.closest('[data-action="show-finance-graph"]');
+        if (financeGraphTarget) {
+            showFinanceGraph(financeGraphTarget);
+        }
+    });
+
+    document.body.addEventListener('mouseout', (e) => {
+        const graphTarget = e.target.closest('[data-action="show-price-graph"], [data-action="show-finance-graph"]');
+        if (graphTarget) {
+            hideGraph();
         }
     });
 
