@@ -610,17 +610,17 @@ body {
 }
 
 .lore-tooltip {
-    display: none; /* Hidden by default */
-    position: fixed; /* Position relative to the viewport to center on screen */
+    display: none; /* Hidden by default */ 
+    position: fixed; /* Position relative to the viewport */
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* This is what centers the element */
-    width: 420px; /* Adjusted width for a better fit */
+    transform: translate(-50%, -50%);
+    width: 420px;
     max-width: 90vw;
-    max-height: 55vh; /* Adjusted height to prevent running off-screen */
-    overflow-y: auto; /* Keep content scrollable */
-    background-color: #1f2937; /* New dark grey background */
-    border: 2px solid #ffffff; /* New white border */
+    max-height: 55vh;
+    overflow-y: auto;
+    background-color: #1f2937;
+    border: 2px solid #ffffff;
     border-radius: 0.75rem;
     padding: 1.5rem;
     font-size: 1rem;
@@ -629,10 +629,9 @@ body {
     z-index: 60;
     text-align: left;
     font-style: normal;
-    animation: pulse-yellow 2.5s infinite; /* Applies the pulsing glow */
-    animation: pulse-white 2.5s infinite; /* Use the new white pulsing glow */
-    scrollbar-width: none;  /* Hides scrollbar in Firefox */
-    -ms-overflow-style: none;  /* Hides scrollbar in IE and Edge */
+    animation: pulse-white 2.5s infinite;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .lore-tooltip.visible {
@@ -641,4 +640,41 @@ body {
 
 .lore-tooltip::-webkit-scrollbar {
     display: none;
+}
+
+#travel-view {
+    position: relative; /* Establishes the positioning frame for the travel screen */
+    padding-bottom: 4rem; /* Creates space at the bottom for the new elements */
+}
+
+/* Positions the "The story so far..." button */
+#lore-button-container {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    z-index: 20;
+
+    /* Visual styles from before */
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #4a6a8a;
+    border-radius: 8px;
+    background-color: #22304a;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: #c0d0f0;
+    transition: all 0.3s ease;
+}
+
+#lore-button-container:hover {
+    background-color: #32405a;
+    color: #e0f0ff;
+}
+
+#designer-credit {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
 }
