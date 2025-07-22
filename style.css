@@ -602,11 +602,11 @@ body {
 }
 
 .lore-container {
-    position: relative;
-    cursor: help;
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 8px;
+    cursor: pointer;
+    display: inline;
+    color: #a3b8ee;
+    font-style: italic;
+    font-weight: bold;
 }
 
 .lore-tooltip {
