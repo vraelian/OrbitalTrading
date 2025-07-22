@@ -650,7 +650,7 @@ body {
 /* Positions the "The story so far..." button */
 #lore-button-container {
     position: absolute;
-    bottom: 1.5rem;
+    bottom: 0.5rem;
     left: 1.5rem;
     z-index: 20;
 
@@ -669,12 +669,4 @@ body {
 #lore-button-container:hover {
     background-color: #32405a;
     color: #e0f0ff;
-}
-
-#designer-credit {
-    position: absolute;
-    bottom: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 20;
 }
