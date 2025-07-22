@@ -605,7 +605,7 @@ body {
     cursor: pointer;
     display: inline;
     color: #a3b8ee;
-    font-style: italic;
+    font-style: italic; 
     font-weight: bold;
 }
 
