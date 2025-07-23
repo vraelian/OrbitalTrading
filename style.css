@@ -647,15 +647,79 @@ body {
     margin-bottom: 0.1rem;
 }
 @media (max-width: 768px) {
+    /* --- General Mobile Layout --- */
+    body {
+        padding-bottom: 15vh;
+    }
+    #game-day {
+        font-size: 4.5rem;
+    }
+
+    /* --- Header Styles --- */
+    #header-main {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    #header-main > div:first-child {
+        text-align: center;
+        flex-basis: 100%;
+    }
+    #header-nav-buttons {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        width: 100%;
+        justify-content: space-around;
+    }
+    .btn-header {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.8rem;
+        flex: 1;
+        min-width: 0;
+        width: auto;
+    }
+
+    /* --- Market View Styles --- */
+    .commodity-name {
+        font-size: 1.1rem;
+        line-height: 1.3;
+    }
+    .mobile-controls-wrapper {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .mobile-controls-wrapper .item-btn {
+        width: 65px;
+        height: 32px;
+        padding: 0.25rem 0;
+        font-size: 0.9rem;
+    }
+    .mobile-controls-wrapper .btn-sm {
+        height: 28px;
+        font-size: 0.75rem;
+    }
+    .mobile-controls-wrapper .qty-input {
+        width: 44px;
+        height: 32px;
+        font-size: 1rem;
+        padding: 0;
+    }
+    .mobile-controls-wrapper .qty-btn {
+        width: 30px;
+        height: 24px;
+        line-height: 22px;
+    }
+
+    /* --- Travel View Footer Styles --- */
     #travel-view {
         padding-bottom: 2rem;
     }
-
     #nav-divider {
         margin-top: 2.5rem;
         margin-bottom: 0.1rem;
     }
-
     #bottom-nav-buttons {
         display: flex;
         flex-direction: column;
@@ -663,7 +727,6 @@ body {
         gap: 0.75rem;
         margin-top: 1.5rem;
     }
-
     body #bottom-nav-buttons > * {
         position: static;
         transform: none;
