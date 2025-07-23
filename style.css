@@ -584,6 +584,34 @@ body {
         font-size: 0.75rem;
     }
     .mobile-controls-wrapper .qty-input {
+
+    #bottom-nav-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-bottom: 0.5rem;
+    }
+    #lore-button-container,
+    #tutorial-button-container,
+    #feedback-button-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.5rem;
+    }
+    #lore-button-container, #tutorial-button-container, #feedback-button-container {
+        position: relative; /* This is the key change */
+        width: 80%;
+        max-width: 300px;
+        text-align: center;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        transform: none;
+    }
         width: 44px;
         height: 32px;
         font-size: 1rem;
@@ -593,6 +621,29 @@ body {
         width: 30px;
         height: 24px;
         line-height: 22px;
+    }
+}
+
+@media (max-width: 768px) {
+    #bottom-nav-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        padding-bottom: 0.5rem;
+    }
+    #lore-button-container,
+    #tutorial-button-container,
+    #feedback-button-container {
+        position: relative; /* This is the key change */
+        left: auto;
+        right: auto;
+        bottom: auto;
+        transform: none;
+        width: 80%;
+        max-width: 300px;
+        text-align: center;
     }
 }
 
@@ -634,14 +685,39 @@ body {
     -ms-overflow-style: none;
 }
 
-.lore-tooltip.visible {
+.tutorial-tooltip {
+    display: none; /* Hidden by default */ 
+    position: fixed; /* Position relative to the viewport */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    max-width: 90vw;
+    max-height: 55vh;
+    overflow-y: auto;
+    background-color: #1f2937;
+    border: 2px solid #10b981;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #d0d8e8;
+    z-index: 60;
+    text-align: left;
+    font-style: normal;
+    animation: pulse-green-border 2.5s infinite;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.lore-tooltip.visible, .tutorial-tooltip.visible {
     display: block; /* Class to make it visible */
 }
 
-.lore-tooltip::-webkit-scrollbar {
+.lore-tooltip::-webkit-scrollbar, .tutorial-tooltip::-webkit-scrollbar {
     display: none;
 }
-
+ 
 #travel-view {
     position: relative; /* Establishes the positioning frame for the travel screen */
     padding-bottom: 4rem; /* Creates space at the bottom for the new elements */
@@ -666,7 +742,56 @@ body {
     transition: all 0.3s ease;
 }
 
-#lore-button-container:hover {
+#tutorial-button-container {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 1.5rem;
+    z-index: 20;
+
+    /* Visual styles from before */
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #4a6a8a;
+    border-radius: 8px;
+    background-color: #22304a;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: #c0d0f0;
+    transition: all 0.3s ease;
+}
+
+#lore-button-container:hover, #tutorial-button-container:hover {
+    background-color: #32405a;
+    color: #e0f0ff;
+}
+
+#nav-divider {
+    border-color: #3a4a6a;
+    border-top-width: 2px;
+    margin-top: 4rem;
+    margin-bottom: 0.1rem;
+}
+
+#feedback-button-container {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    text-decoration: none;
+
+    /* Visual styles from before */
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #4a6a8a;
+    border-radius: 8px;
+    background-color: #22304a;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: #c0d0f0;
+    transition: all 0.3s ease;
+}
+#lore-button-container:hover, #tutorial-button-container:hover, #feedback-button-container:hover {
     background-color: #32405a;
     color: #e0f0ff;
 }

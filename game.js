@@ -2243,25 +2243,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.body.addEventListener('click', (e) => {
         if (gameState.isGameOver) return;
-        
 
-        // --- LORE TOOLTIP ---
+        // --- LORE & TUTORIAL TOOLTIPS ---
         const loreTrigger = e.target.closest('.lore-container');
-        const wasClickInsideTooltip = e.target.closest('.lore-tooltip');
-        const activeLoreTooltip = document.querySelector('.lore-tooltip.visible');
-
-        if (loreTrigger) {
-            // If the click was on the trigger icon, toggle its tooltip
-            const tooltipToToggle = loreTrigger.querySelector('.lore-tooltip');
-            if (tooltipToToggle) {
-                tooltipToToggle.classList.toggle('visible');
+        const tutorialTrigger = e.target.closest('.tutorial-container');
+        const trigger = loreTrigger || tutorialTrigger;
+        const wasClickInsideTooltip = e.target.closest('.lore-tooltip, .tutorial-tooltip');
+        const visibleTooltip = document.querySelector('.lore-tooltip.visible, .tutorial-tooltip.visible');
+        if (trigger) {
+            const tooltipSelector = trigger.classList.contains('lore-container') ? '.lore-tooltip' : '.tutorial-tooltip';
+            const targetTooltip = trigger.querySelector(tooltipSelector);
+            if (visibleTooltip && visibleTooltip !== targetTooltip) {
+                visibleTooltip.classList.remove('visible');
             }
-        } else if (activeLoreTooltip && !wasClickInsideTooltip) {
-            // If a tooltip is active AND the click was NOT inside it, close it.
-            // This allows clicks inside the tooltip (for scrolling) to be ignored.
-            activeLoreTooltip.classList.remove('visible');
+            if (targetTooltip) { // Check if targetTooltip exists before toggling
+                targetTooltip.classList.toggle('visible');
+            }
+        } else if (visibleTooltip && !wasClickInsideTooltip) {
+            visibleTooltip.classList.remove('visible');
         }
-
         // --- COMMODITY TOOLTIP ---
         const commodityTooltipTrigger = e.target.closest('.commodity-name-tooltip');
         // Close any active tooltips that weren't the one just clicked.
