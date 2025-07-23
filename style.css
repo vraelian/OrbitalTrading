@@ -49,7 +49,7 @@ body {
      padding: 0.75rem 1.5rem;
      font-size: 1.125rem;
 }
-/* NEW: Styles for the currently active navigation button. */
+
 .btn-header-active {
     border-color: #facc15;
     background-color: #1a253c;
@@ -147,7 +147,7 @@ body {
 }
 .perk-button h4 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.875rem; /* Reduced from 1.25rem */
+    font-size: 0.875rem; 
     color: #0c101d;
     text-align: center;
 }
