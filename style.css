@@ -529,130 +529,12 @@ body {
     transition: opacity 0.75s ease-in-out;
 }
 #travel-status-text {
-    transition: all 0.5s ease;
+    transition: all 0.5s ease; /* Keep this transition */
 }
-
-@media (max-width: 768px) {
-    body {
-        padding-bottom: 15vh;
-    }
-    #game-day {
-        font-size: 4.5rem;
-    }
-    #header-main {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    #header-main > div:first-child {
-        text-align: center;
-        flex-basis: 100%;
-    }
-    #header-nav-buttons {
-        flex-direction: row;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 1rem;
-        width: 100%;
-        justify-content: space-around;
-    }
-    .btn-header {
-        padding: 0.5rem 0.6rem;
-        font-size: 0.8rem;
-        flex: 1;
-        min-width: 0;
-        width: auto;
-    }
-    .commodity-name {
-        font-size: 1.1rem;
-        line-height: 1.3;
-    }
-    
-    .mobile-controls-wrapper {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-    }
-    
-    .mobile-controls-wrapper .item-btn {
-        width: 65px;
-        height: 32px;
-        padding: 0.25rem 0;
-        font-size: 0.9rem;
-    }
-    .mobile-controls-wrapper .btn-sm {
-        height: 28px;
-        font-size: 0.75rem;
-    }
-    .mobile-controls-wrapper .qty-input {
-
-    }
-    #bottom-nav-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 1rem;
-        padding-bottom: 0.5rem;
-    }
-    #lore-button-container,
-    #tutorial-button-container,
-    #feedback-button-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-        padding-bottom: 0.5rem;
-    }
-    #lore-button-container, #tutorial-button-container, #feedback-button-container {
-        position: relative; /* This is the key change */
-        width: 80%;
-        max-width: 300px;
-        text-align: center;
-        left: auto;
-        right: auto;
-        bottom: auto;
-        transform: none;
-    }
-        width: 44px;
-        height: 32px;
-        font-size: 1rem;
-        padding: 0;
-    }
-    .mobile-controls-wrapper .qty-btn {
-        width: 30px;
-        height: 24px;
-        line-height: 22px;
-    }
-}
-
-@media (max-width: 768px) {
-    #bottom-nav-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-        margin-top: 1rem;
-        padding-bottom: 0.5rem;
-    }
-    #lore-button-container,
-    #tutorial-button-container,
-    #feedback-button-container {
-        position: relative; /* This is the key change */
-        left: auto;
-        right: auto;
-        bottom: auto;
-        transform: none;
-        width: 80%;
-        max-width: 300px;
-        text-align: center;
-    }
-}
-
 @keyframes pulse-white {
     0%, 100% { box-shadow: 0 0 8px rgba(255, 255, 255, 0.6); }
     50% { box-shadow: 0 0 16px rgba(255, 255, 255, 0.8); }
 }
-
 .lore-container {
     cursor: pointer;
     display: inline;
@@ -660,7 +542,6 @@ body {
     font-style: italic; 
     font-weight: bold;
 }
-
 .lore-tooltip {
     display: none; /* Hidden by default */ 
     position: fixed; /* Position relative to the viewport */
@@ -685,7 +566,6 @@ body {
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
-
 .tutorial-tooltip {
     display: none; /* Hidden by default */ 
     position: fixed; /* Position relative to the viewport */
@@ -710,11 +590,9 @@ body {
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
-
 .lore-tooltip.visible, .tutorial-tooltip.visible {
     display: block; /* Class to make it visible */
 }
-
 .lore-tooltip::-webkit-scrollbar, .tutorial-tooltip::-webkit-scrollbar {
     display: none;
 }
@@ -723,7 +601,6 @@ body {
     position: relative; /* Establishes the positioning frame for the travel screen */
     padding-bottom: 4rem; /* Creates space at the bottom for the new elements */
 }
-
 /* Positions the "The story so far..." button */
 #lore-button-container {
     position: absolute;
@@ -742,7 +619,6 @@ body {
     color: #c0d0f0;
     transition: all 0.3s ease;
 }
-
 #tutorial-button-container {
     position: absolute;
     bottom: 0.5rem;
@@ -760,19 +636,43 @@ body {
     color: #c0d0f0;
     transition: all 0.3s ease;
 }
-
 #lore-button-container:hover, #tutorial-button-container:hover {
     background-color: #32405a;
     color: #e0f0ff;
 }
-
 #nav-divider {
     border-color: #3a4a6a;
     border-top-width: 2px;
     margin-top: 4rem;
     margin-bottom: 0.1rem;
 }
+@media (max-width: 768px) {
+    #travel-view {
+        padding-bottom: 2rem;
+    }
 
+    #nav-divider {
+        margin-top: 2.5rem;
+        margin-bottom: 0.1rem;
+    }
+
+    #bottom-nav-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    body #bottom-nav-buttons > * {
+        position: static;
+        transform: none;
+        display: block;
+        width: 80%;
+        max-width: 300px;
+        text-align: center;
+    }
+}
 #feedback-button-container {
     position: absolute;
     bottom: 0.5rem;
