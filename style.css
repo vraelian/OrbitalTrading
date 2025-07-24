@@ -561,6 +561,7 @@ body {
     border: 2px solid #ffffff;
     border-radius: 0.75rem;
     padding: 1.5rem;
+    font-family: 'Exo 2', sans-serif;
     font-size: 1rem;
     line-height: 1.5;
     color: #d0d8e8;
@@ -644,6 +645,9 @@ body {
 #lore-button-container:hover, #tutorial-button-container:hover {
     background-color: #32405a;
     color: #e0f0ff;
+}
+#event-modal .lore-tooltip {
+    max-height: 43vh;
 }
 #nav-divider {
     border-color: #3a4a6a;
