@@ -2244,10 +2244,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', (e) => {
         if (gameState.isGameOver) return;
 
-        // --- LORE & TUTORIAL TOOLTIPS ---
-        const loreTrigger = e.target.closest('.lore-container');
-        const tutorialTrigger = e.target.closest('.tutorial-container');
-        const trigger = loreTrigger || tutorialTrigger;
+        // --- TOOLTIPS ---
+        // Generic tooltip handling for lore and tutorial tooltips
+        const loreTrigger = e.target.closest('.lore-container'); // For lore tooltips
+        const tutorialTrigger = e.target.closest('.tutorial-container'); // For tutorial tooltips
+        const trigger = loreTrigger || tutorialTrigger; // Combine triggers
+
         const wasClickInsideTooltip = e.target.closest('.lore-tooltip, .tutorial-tooltip');
         const visibleTooltip = document.querySelector('.lore-tooltip.visible, .tutorial-tooltip.visible');
         if (trigger) {
@@ -2259,18 +2261,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetTooltip) { // Check if targetTooltip exists before toggling
                 targetTooltip.classList.toggle('visible');
             }
-        } else if (visibleTooltip && !wasClickInsideTooltip) {
+        } else if (visibleTooltip && !wasClickInsideTooltip) { // If click outside, hide visible tooltip
             visibleTooltip.classList.remove('visible');
         }
-        // --- COMMODITY TOOLTIP ---
+
+        // Commodity name tooltip handling
         const commodityTooltipTrigger = e.target.closest('.commodity-name-tooltip');
-        // Close any active tooltips that weren't the one just clicked.
+        // Close any active commodity tooltips that weren't the one just clicked.
         document.querySelectorAll('.tooltip-active').forEach(activeEl => {
             if (activeEl !== commodityTooltipTrigger) {
                 activeEl.classList.remove('tooltip-active');
             }
         });
-        // Toggle the clicked tooltip.
+        // Toggle the clicked commodity tooltip.
         if (commodityTooltipTrigger) {
             commodityTooltipTrigger.classList.toggle('tooltip-active');
         }
@@ -2278,8 +2281,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- GAME ACTIONS ---
         // Travel by clicking a location card
         const locationCard = e.target.closest('.location-card');
-        if (locationCard && !locationCard.classList.contains('disabled-current')) {
-            travelTo(locationCard.dataset.locationId);
+        if (locationCard) {
+            // If the clicked card is the one for the current location, just show the market.
+            if (locationCard.classList.contains('disabled-current')) {
+                showMarketView();
+            } 
+            // Otherwise, initiate travel to the new location.
+            else {
+                travelTo(locationCard.dataset.locationId);
+            }
             return;
         }
 
@@ -2390,13 +2400,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const refuelBtn = document.getElementById('refuel-btn');
-    const stopRefueling = () => { 
-        if(refuelInterval) { 
-            clearInterval(refuelInterval); 
-            refuelInterval = null; 
-            refuelButtonElement = null;
-        } 
-    };
+    const stopRefueling = () => {
+    if(refuelInterval) {
+        clearInterval(refuelInterval);
+        refuelInterval = null;
+        refuelButtonElement = null;
+    }
+    if (gameState && gameState.player) {
+        const ship = getActiveShip();
+        if(ship) document.getElementById('refuel-btn').disabled = ship.fuel >= ship.maxFuel;
+    }
+};
     const startRefueling = (e) => {
          if (gameState.isGameOver || refuelInterval) return;
          refuelButtonElement = e.currentTarget;
@@ -2428,13 +2442,17 @@ document.addEventListener('DOMContentLoaded', () => {
     ['mouseup', 'mouseleave', 'touchend'].forEach(evt => document.addEventListener(evt, stopRefueling));
 
     const repairBtn = document.getElementById('repair-btn');
-    const stopRepairing = () => { 
-        if(repairInterval) { 
-            clearInterval(repairInterval); 
-            repairInterval = null; 
-            repairButtonElement = null;
-        } 
-    };
+    const stopRepairing = () => {
+    if(repairInterval) {
+        clearInterval(repairInterval);
+        repairInterval = null;
+        repairButtonElement = null;
+    }
+    if (gameState && gameState.player) {
+        const ship = getActiveShip();
+        if(ship) document.getElementById('repair-btn').disabled = ship.health >= ship.maxHealth;
+    }
+};
     const startRepairing = (e) => {
          if (gameState.isGameOver || repairInterval) return;
          repairButtonElement = e.currentTarget;
