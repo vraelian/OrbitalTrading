@@ -1,3 +1,4 @@
+// vraelian/orbitaltrading/OrbitalTrading-5eb328469e4a16136fdedcb7fc35b224fdd6e2f9/OrbitalTradingProject/js/data/gamedata.js
 export const LOCATION_VISUALS = {
     'loc_earth': '🌍',
     'loc_luna': '🌕',
@@ -42,7 +43,7 @@ export const AGE_EVENTS = [
     }
 ];
 
-// Note: The 'precondition' functions here will be called from SimulationService, 
+// Note: The 'precondition' functions here will be called from SimulationService,
 // which will have access to the necessary state and helper functions.
 export const RANDOM_EVENTS = [
     {
@@ -76,7 +77,7 @@ export const RANDOM_EVENTS = [
         id: 'floating_cargo',
         title: 'Floating Cargo Pod',
         scenario: 'Long-range sensors detect an unmarked, sealed cargo pod adrift in the shipping lane. It appears to be intact.',
-        precondition: (gameState, activeShip) => true,
+        precondition: () => true,
         choices: [
             {
                 title: 'Bring it Aboard',
@@ -168,7 +169,7 @@ export const RANDOM_EVENTS = [
         id: 'nav_glitch',
         title: 'Navigation Sensor Glitch',
         scenario: 'The nav-console flashes red. Your primary positioning sensors are offline, and you\'re flying blind in the deep dark.',
-        precondition: (gameState, activeShip) => true,
+        precondition: () => true,
         choices: [
             {
                 title: 'Attempt Hard Reboot',
@@ -195,7 +196,7 @@ export const RANDOM_EVENTS = [
         id: 'life_support_fluctuation',
         title: 'Life Support Fluctuation',
         scenario: 'An alarm indicates unstable oxygen levels. It\'s not critical yet, but the crew is on edge and efficiency is dropping.',
-        precondition: (gameState, activeShip) => activeShip.health > (SHIPS[activeShip.id].maxHealth * 0.25),
+        precondition: (gameState, activeShip) => activeShip.health > (activeShip.maxHealth * 0.25),
         choices: [
             {
                 title: 'Salvage materials from the ship to repair the atmospheric regulators. (This will cost 25% hull damage)',
@@ -242,7 +243,7 @@ export const RANDOM_EVENTS = [
         id: 'space_race',
         title: 'Space Race Wager',
         scenario: 'A smug-looking luxury ship pulls alongside and its captain, broadcasted on your main screen, challenges you to a "friendly" race to the destination.',
-        precondition: (gameState, activeShip) => gameState.player.credits > 100,
+        precondition: (gameState) => gameState.player.credits > 100,
         choices: [
             {
                 title: 'Accept Wager (Bet: 80% of current credits)',
@@ -266,13 +267,13 @@ export const RANDOM_EVENTS = [
         scenario: 'You intercept a system-wide emergency broadcast. A new outpost is offering a massive premium for an immediate delivery of a specific commodity that you happen to be carrying.',
         precondition: (gameState, activeShip, getActiveInventory) => {
             const inventory = getActiveInventory();
-            const eligibleCommodities = Object.entries(inventory).filter(([id, item]) => item.quantity > 0);
+            const eligibleCommodities = Object.entries(inventory).filter(([, item]) => item.quantity > 0);
             return eligibleCommodities.length > 0;
         },
         choices: [
             {
                 title: 'Divert Course to Deliver',
-                outcomes: [ { chance: 1.0, description: 'You sell your entire stack of the requested commodity for 3 times its galactic average value. Your course is diverted to a new, random destination, adding 7 days to your trip.', effects: [ { type: 'sell_random_cargo_premium', value: 3 }, { type: 'travel_time_add', value: 7 }, { type: 'set_new_random_destination', value: true } ] } ]
+                outcomes: [ { chance: 1.0, description: 'You sell your entire stack of the requested commodity for 3 times its galactic average value. Your course is diverted to a new, random destination, adding 7 days to your trip.', effects: [ { type: 'sell_random_cargo_premium', value: 3 }, { type: 'travel_time_add', value: 7 }, { type: 'set_new_random_destination' } ] } ]
             },
             {
                 title: 'Decline and Continue',
