@@ -1,4 +1,4 @@
-// js/services/SimulationService.js
+// vraelian/orbitaltrading/OrbitalTrading-5eb328469e4a16136fdedcb7fc35b224fdd6e2f9/OrbitalTradingProject/js/services/SimulationService.js
 import { CONFIG } from '../data/config.js';
 import { SHIPS, COMMODITIES, MARKETS, RANDOM_EVENTS, AGE_EVENTS, PERKS } from '../data/gamedata.js';
 import { DATE_CONFIG } from '../data/dateConfig.js';
@@ -73,6 +73,14 @@ export class SimulationService {
             this.uiManager.queueModal('event-modal', "Insufficient Fuel", `Trip modifications left you without enough fuel. You need ${travelInfo.fuelCost} but only have ${Math.floor(activeShip.fuel)}.`);
             return;
         }
+
+        // Force an event if the debug key was used
+        if (eventMods.forceEvent) {
+            if (this._checkForRandomEvent(locationId, true)) { // Pass true to bypass chance roll
+                return;
+            }
+        }
+
 
         let travelHullDamage = travelInfo.time * CONFIG.HULL_DECAY_PER_TRAVEL_DAY;
         if (state.player.activePerks.navigator) travelHullDamage *= PERKS.navigator.hullDecayMod;
@@ -374,8 +382,8 @@ export class SimulationService {
         this.gameState._recordPriceHistory();
     }
     
-    _checkForRandomEvent(destinationId) {
-        if (Math.random() > CONFIG.RANDOM_EVENT_CHANCE) return false;
+    _checkForRandomEvent(destinationId, force = false) {
+        if (!force && Math.random() > CONFIG.RANDOM_EVENT_CHANCE) return false;
 
         const activeShip = this._getActiveShip();
         const validEvents = RANDOM_EVENTS.filter(event => 

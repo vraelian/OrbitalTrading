@@ -1,6 +1,6 @@
-// js/services/EventManager.js
+// vraelian/orbitaltrading/OrbitalTrading-5eb328469e4a16136fdedcb7fc35b224fdd6e2f9/OrbitalTradingProject/js/services/EventManager.js
 import { formatCredits } from '../utils.js';
-import { SHIPS } from '../data/gamedata.js';
+import { SHIPS, COMMODITIES, MARKETS } from '../data/gamedata.js';
 import { calculateInventoryUsed } from '../utils.js';
 
 export class EventManager {
@@ -157,17 +157,39 @@ export class EventManager {
         if (this.gameState.isGameOver || e.ctrlKey || e.metaKey) return;
         let message = '';
         switch(e.key) {
-             case '!': 
-                this.simulationService._advanceDays(30);
-                message = 'Debug: Time advanced 30 days.';
+            case '!':
+                this.gameState.player.credits += 500000000000;
+                message = 'Debug: +500B Credits.';
                 break;
             case '@':
-                this.gameState.player.credits += 1000000;
-                message = 'Debug: +1M Credits.';
+                const ship = this.simulationService._getActiveShip();
+                this.gameState.player.shipStates[ship.id].fuel = ship.maxFuel;
+
+                const possibleDestinations = MARKETS.filter(m => m.id !== this.gameState.currentLocationId && this.gameState.player.unlockedLocationIds.includes(m.id));
+                if (possibleDestinations.length > 0) {
+                    const randomDestination = possibleDestinations[Math.floor(Math.random() * possibleDestinations.length)];
+                    this.simulationService.initiateTravel(randomDestination.id, { forceEvent: true });
+                    message = `Debug: Refilled fuel & force-traveling to ${randomDestination.name} with event.`;
+                } else {
+                    message = `Debug: No available destinations.`;
+                }
                 break;
             case '#':
-                this.simulationService._advanceDays(365);
-                message = `Debug: Time advanced 1 year.`;
+                this.gameState.player.starportUnlocked = true;
+                Object.keys(SHIPS).forEach(shipId => {
+                    if (!this.gameState.player.ownedShipIds.includes(shipId)) {
+                        const newShip = SHIPS[shipId];
+                        this.gameState.player.ownedShipIds.push(shipId);
+                        this.gameState.player.shipStates[shipId] = { health: newShip.maxHealth, fuel: newShip.maxFuel, hullAlerts: { one: false, two: false } };
+                        this.gameState.player.inventories[shipId] = {};
+                        COMMODITIES.forEach(c => { this.gameState.player.inventories[shipId][c.id] = { quantity: 0, avgCost: 0 }; });
+                    }
+                });
+                message = 'Debug: Starport unlocked & all ships added.';
+                break;
+            case '$':
+                this.simulationService._advanceDays(366);
+                message = `Debug: Time advanced 1 year and 1 day.`;
                 break;
         }
         if (message) {

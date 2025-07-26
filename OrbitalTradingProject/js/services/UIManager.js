@@ -538,9 +538,9 @@ export class UIManager {
             } else {
                 statusText.textContent = `Arrived at ${to.name}`;
                 arrivalLore.innerHTML = to.arrivalLore || "You have arrived.";
-                infoText.innerHTML = `Time: ${travelInfo.time} Days | <span class="font-bold text-sky-300">Fuel: ${travelInfo.fuelCost}</span>`;
+                infoText.innerHTML = `Journey Time: ${travelInfo.time} Days | <span class="font-bold text-sky-300">Fuel Expended: ${travelInfo.fuelCost}</span>`;
                 hullDamageText.className = 'text-sm font-roboto-mono mt-1 font-bold text-green-300';
-                hullDamageText.innerHTML = totalHullDamagePercent > 0.01 ? `Hull Integrity Decreased by ${totalHullDamagePercent.toFixed(2)}%` : '';
+                hullDamageText.innerHTML = totalHullDamagePercent > 0.01 ? `Hull Integrity -${totalHullDamagePercent.toFixed(2)}%` : '';
                 arrivalLore.style.opacity = 1;
                 progressContainer.classList.add('hidden');
                 readoutContainer.classList.remove('hidden');

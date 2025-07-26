@@ -43,8 +43,6 @@ export const AGE_EVENTS = [
     }
 ];
 
-// Note: The 'precondition' functions here will be called from SimulationService,
-// which will have access to the necessary state and helper functions.
 export const RANDOM_EVENTS = [
     {
         id: 'distress_call',
