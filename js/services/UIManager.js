@@ -150,10 +150,14 @@ export class UIManager {
     }
 
     renderActiveView(gameState) {
-        ['market-view', 'travel-view', 'starport-view'].forEach(viewId => {
-            document.getElementById(viewId).style.display = 'none';
-        });
-        document.getElementById(gameState.currentView).style.display = 'block';
+        // Hide all views first
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+
+        // Show the current one
+        const activeView = document.getElementById(gameState.currentView);
+        if (activeView) {
+            activeView.classList.add('active-view');
+        }
 
         if (this.isMobile) {
             this.cache.inventoryTitle.textContent = "Cargo Manifest";
@@ -552,12 +556,15 @@ export class UIManager {
                 statusText.textContent = `Arrived at ${to.name}`;
                 arrivalLore.innerHTML = to.arrivalLore || "You have arrived.";
                 infoText.innerHTML = `
-                    <div class="text-center">
+                    <div class="text-center ${this.isMobile ? 'travel-info-mobile' : ''}">
                         <div>Journey Time: ${travelInfo.time} Days</div>
                         <div><span class="font-bold text-sky-300">Fuel Expended: ${travelInfo.fuelCost}</span></div>
                     </div>`;
                 hullDamageText.className = 'text-sm font-roboto-mono mt-1 font-bold text-green-300';
                 hullDamageText.innerHTML = totalHullDamagePercent > 0.01 ? `Hull Integrity -${totalHullDamagePercent.toFixed(2)}%` : '';
+                if (this.isMobile && totalHullDamagePercent > 0.01) {
+                     infoText.querySelector('div').appendChild(hullDamageText);
+                }
                 arrivalLore.style.opacity = 1;
                 progressContainer.classList.add('hidden');
                 readoutContainer.classList.remove('hidden');

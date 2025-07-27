@@ -39,10 +39,6 @@ export class EventManager {
                  this.uiManager.renderMarketView(this.gameState.getState());
              }
         });
-
-        // Tooltip dismissal on mobile
-        document.body.addEventListener('touchstart', () => this.uiManager.hideGraph(), { passive: true });
-        window.addEventListener('scroll', () => this.uiManager.hideGraph(), { passive: true });
     }
 
     _handleClick(e) {
@@ -209,8 +205,9 @@ export class EventManager {
 
     _startRefueling(e) {
         if (this.gameState.isGameOver || this.refuelInterval) return;
-        this._refuelTick(e.currentTarget);
-        this.refuelInterval = setInterval(() => this._refuelTick(e.currentTarget), 200);
+        const buttonElement = e.currentTarget;
+        this._refuelTick(buttonElement); // Initial tick
+        this.refuelInterval = setInterval(() => this._refuelTick(buttonElement), 200);
     }
 
     _stopRefueling() {
@@ -232,8 +229,9 @@ export class EventManager {
 
     _startRepairing(e) {
         if (this.gameState.isGameOver || this.repairInterval) return;
-        this._repairTick(e.currentTarget);
-        this.repairInterval = setInterval(() => this._repairTick(e.currentTarget), 200);
+        const buttonElement = e.currentTarget;
+        this._repairTick(buttonElement); // Initial tick
+        this.repairInterval = setInterval(() => this._repairTick(buttonElement), 200);
     }
 
     _stopRepairing() {
