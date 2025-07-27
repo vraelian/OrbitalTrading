@@ -1,4 +1,4 @@
-// vraelian/orbitaltrading/OrbitalTrading-5eb328469e4a16136fdedcb7fc35b224fdd6e2f9/OrbitalTradingProject/js/services/EventManager.js
+// js/services/EventManager.js
 import { formatCredits } from '../utils.js';
 import { SHIPS, COMMODITIES, MARKETS } from '../data/gamedata.js';
 import { calculateInventoryUsed } from '../utils.js';
@@ -11,10 +11,12 @@ export class EventManager {
         
         this.refuelInterval = null;
         this.repairInterval = null;
+        this.activeTooltipTarget = null;
     }
 
     bindEvents() {
         document.body.addEventListener('click', (e) => this._handleClick(e));
+        document.body.addEventListener('dblclick', (e) => e.preventDefault()); // Prevent double-tap zoom
         document.body.addEventListener('mouseover', (e) => this._handleMouseOver(e));
         document.body.addEventListener('mouseout', (e) => this._handleMouseOut(e));
         document.addEventListener('keydown', (e) => this._handleKeyDown(e));
@@ -39,12 +41,52 @@ export class EventManager {
                  this.uiManager.renderMarketView(this.gameState.getState());
              }
         });
+
+        window.addEventListener('scroll', () => {
+            if (this.uiManager.isMobile && this.activeTooltipTarget) {
+                this.uiManager.hideGraph();
+                this.uiManager.hideGenericTooltip();
+                this.activeTooltipTarget = null;
+            }
+        }, { passive: true });
     }
 
     _handleClick(e) {
         const state = this.gameState.getState();
         if (state.isGameOver) return;
 
+        // --- Mobile Tooltip Handling ---
+        if (this.uiManager.isMobile) {
+            const graphTarget = e.target.closest('[data-action="show-price-graph"], [data-action="show-finance-graph"]');
+            const cargoTooltipTarget = e.target.closest('.cargo-item-tooltip');
+            
+            // If a tooltip is already active, this click should only close it.
+            if (this.activeTooltipTarget) {
+                // ...unless we clicked the same element again, in which case do nothing.
+                if (this.activeTooltipTarget === graphTarget || this.activeTooltipTarget === cargoTooltipTarget) {
+                    return;
+                }
+                this.uiManager.hideGraph();
+                this.uiManager.hideGenericTooltip();
+                this.activeTooltipTarget = null;
+                return; // Stop further event processing
+            }
+
+            // If no tooltip is active, check if this click should open one.
+            if (graphTarget) {
+                this.uiManager.showGraph(graphTarget, this.gameState.getState());
+                this.activeTooltipTarget = graphTarget;
+                return; // Stop further event processing
+            }
+            if (cargoTooltipTarget) {
+                const tooltipText = cargoTooltipTarget.dataset.tooltip;
+                this.uiManager.showGenericTooltip(cargoTooltipTarget, tooltipText);
+                this.activeTooltipTarget = cargoTooltipTarget;
+                return; // Stop further event processing
+            }
+        }
+        
+        // --- Lore/Tutorial Tooltip Handling (All Devices) ---
         const loreTrigger = e.target.closest('.lore-container, .tutorial-container');
         if (loreTrigger) {
             const tooltip = loreTrigger.querySelector('.lore-tooltip, .tutorial-tooltip');
@@ -57,6 +99,7 @@ export class EventManager {
             visibleTooltip.classList.remove('visible');
         }
 
+        // --- Standard Action Handling ---
         const actionTarget = e.target.closest('[data-action]');
         if (actionTarget) {
             const { action, goodId, locationId, viewId, shipId, loanDetails, cost } = actionTarget.dataset;
@@ -129,7 +172,7 @@ export class EventManager {
     }
 
     _handleMouseOver(e) {
-        if (window.innerWidth <= 768) return;
+        if (this.uiManager.isMobile) return;
         const graphTarget = e.target.closest('[data-action="show-price-graph"], [data-action="show-finance-graph"]');
         if (graphTarget) {
             this.uiManager.showGraph(graphTarget, this.gameState.getState());
@@ -137,7 +180,7 @@ export class EventManager {
     }
 
     _handleMouseOut(e) {
-        if (window.innerWidth <= 768) return;
+        if (this.uiManager.isMobile) return;
         const graphTarget = e.target.closest('[data-action="show-price-graph"], [data-action="show-finance-graph"]');
         if (graphTarget) {
             this.uiManager.hideGraph();
@@ -206,7 +249,7 @@ export class EventManager {
     _startRefueling(e) {
         if (this.gameState.isGameOver || this.refuelInterval) return;
         const buttonElement = e.currentTarget;
-        this._refuelTick(buttonElement); // Initial tick
+        this._refuelTick(buttonElement); 
         this.refuelInterval = setInterval(() => this._refuelTick(buttonElement), 200);
     }
 
@@ -230,7 +273,7 @@ export class EventManager {
     _startRepairing(e) {
         if (this.gameState.isGameOver || this.repairInterval) return;
         const buttonElement = e.currentTarget;
-        this._repairTick(buttonElement); // Initial tick
+        this._repairTick(buttonElement);
         this.repairInterval = setInterval(() => this._repairTick(buttonElement), 200);
     }
 

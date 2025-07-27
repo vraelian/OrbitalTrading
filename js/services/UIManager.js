@@ -8,6 +8,7 @@ export class UIManager {
         this.isMobile = window.innerWidth <= 768;
         this.modalQueue = [];
         this.activeGraphAnchor = null;
+        this.activeGenericTooltipAnchor = null;
         this._cacheDOM();
 
         window.addEventListener('resize', () => {
@@ -52,6 +53,7 @@ export class UIManager {
             debugToast: document.getElementById('debug-toast'),
             starportUnlockTooltip: document.getElementById('starport-unlock-tooltip'),
             graphTooltip: document.getElementById('graph-tooltip'),
+            genericTooltip: document.getElementById('generic-tooltip'),
         };
     }
 
@@ -94,7 +96,7 @@ export class UIManager {
         this.cache.headerNavButtons.innerHTML = buttons.map(btn => {
             const action = btn.locked ? 'show-starport-locked-toast' : 'set-view';
             const viewData = btn.locked ? '' : `data-view-id="${btn.view}"`;
-            const isDisabled = currentView === btn.view && !btn.locked;
+            const isDisabled = btn.locked || (currentView === btn.view && !btn.locked);
             return `
             <button id="${btn.id}" data-action="${action}" ${viewData} 
                     class="btn btn-header ${currentView === btn.view ? 'btn-header-active' : ''}" 
@@ -150,10 +152,8 @@ export class UIManager {
     }
 
     renderActiveView(gameState) {
-        // Hide all views first
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
-
-        // Show the current one
+        
         const activeView = document.getElementById(gameState.currentView);
         if (activeView) {
             activeView.classList.add('active-view');
@@ -165,9 +165,9 @@ export class UIManager {
             this.cache.inventoryTitle.textContent = "Active Ship Cargo Manifest";
         }
 
-        if (gameState.currentView === 'market-view') this.renderMarketView(gameState);
-        if (gameState.currentView === 'travel-view') this.renderTravelView(gameState);
-        if (gameState.currentView === 'starport-view') this.renderStarportView(gameState);
+        this.renderMarketView(gameState);
+        this.renderTravelView(gameState);
+        this.renderStarportView(gameState);
     }
 
     renderMarketView(gameState) {
@@ -240,7 +240,7 @@ export class UIManager {
         const nameTooltip = isSpecialDemand ? `data-tooltip="${currentLocation.specialDemand[good.id].lore}"` : `data-tooltip="${good.lore}"`;
         const playerInvDisplay = playerItem && playerItem.quantity > 0 ? ` <span class='text-cyan-300'>(${playerItem.quantity})</span>` : '';
         const graphIcon = `<span class="graph-icon" data-action="show-price-graph" data-good-id="${good.id}">📈</span>`;
-        const { marketIndicatorHtml, plIndicatorHtml } = this._getIndicatorHtml(price, sellPrice, galacticAvg, playerItem, true);
+        const { marketIndicatorHtml } = this._getIndicatorHtml(price, sellPrice, galacticAvg, playerItem, true);
         return `
         <div class="item-card-container">
             <div class="bg-black/20 p-4 rounded-lg flex flex-col border ${good.styleClass} shadow-md">
@@ -251,8 +251,8 @@ export class UIManager {
                     </div>
                     <div class="text-right text-sm flex-shrink-0 ml-2 text-outline">Avail: ${marketStock.quantity} ${graphIcon}</div>
                 </div>
-                <div class="flex justify-between items-end mt-2">
-                    <div class="flex items-center space-x-3 text-sm text-outline">${marketIndicatorHtml}${plIndicatorHtml}</div>
+                ${marketIndicatorHtml}
+                <div class="flex justify-end items-end mt-2">
                     <div class="mobile-controls-wrapper">
                         <div class="flex flex-col items-center space-y-1">
                             <button class="btn item-btn" data-action="buy" data-good-id="${good.id}" ${buyDisabled}>Buy</button>
@@ -279,23 +279,38 @@ export class UIManager {
         const marketSign = marketPct > 0 ? '+' : '';
         let marketColor = marketPct < -15 ? 'text-red-400' : (marketPct > 15 ? 'text-green-400' : 'text-white');
         let marketArrowSVG = this._getArrowSvg(marketPct > 15 ? 'up' : marketPct < -15 ? 'down' : 'neutral');
-        const marketIndicatorHtml = isMobile 
-            ? `<div class="flex items-center ${marketColor}"><span>MKT: ${marketSign}${marketPct}%</span> ${marketArrowSVG}</div>`
-            : `<div class="flex items-center gap-2"><div class="market-indicator-stacked ${marketColor}"><span class="text-xs opacity-80">MKT</span><span>${marketSign}${marketPct}%</span></div>${marketArrowSVG}</div>`;
-        let plIndicatorHtml = '';
-        if (playerItem && playerItem.avgCost > 0) {
-            const spreadPerUnit = sellPrice - playerItem.avgCost;
-            if (Math.abs(spreadPerUnit) > 0.01) {
-                const plPct = playerItem.avgCost > 0 ? Math.round((spreadPerUnit / playerItem.avgCost) * 100) : 0;
-                const plColor = spreadPerUnit >= 0 ? 'text-green-400' : 'text-red-400';
-                const plSign = plPct > 0 ? '+' : '';
-                let plArrowSVG = this._getArrowSvg(spreadPerUnit > 0 ? 'up' : 'down');
-                plIndicatorHtml = isMobile
-                    ? `<div class="flex items-center ${plColor}"><span>P/L: ${plSign}${plPct}%</span> ${plArrowSVG}</div>`
-                    : `<div class="flex items-center gap-2"><div class="market-indicator-stacked ${plColor}"><span class="text-xs opacity-80">P/L</span><span>${plSign}${plPct}%</span></div>${plArrowSVG}</div>`;
+
+        if (isMobile) {
+            let mobileHtml = `<div class="mobile-indicator-wrapper text-sm text-outline">`;
+            mobileHtml += `<div class="flex items-center ${marketColor}"><span>MKT: ${marketSign}${marketPct}%</span> ${marketArrowSVG}</div>`;
+            
+            if (playerItem && playerItem.avgCost > 0) {
+                const spreadPerUnit = sellPrice - playerItem.avgCost;
+                if (Math.abs(spreadPerUnit) > 0.01) {
+                    const plPct = playerItem.avgCost > 0 ? Math.round((spreadPerUnit / playerItem.avgCost) * 100) : 0;
+                    const plColor = spreadPerUnit >= 0 ? 'text-green-400' : 'text-red-400';
+                    const plSign = plPct > 0 ? '+' : '';
+                    let plArrowSVG = this._getArrowSvg(spreadPerUnit > 0 ? 'up' : 'down');
+                    mobileHtml += `<div class="flex items-center ${plColor}"><span>P/L: ${plSign}${plPct}%</span> ${plArrowSVG}</div>`;
+                }
             }
+            mobileHtml += `</div>`;
+            return { marketIndicatorHtml: mobileHtml };
+        } else {
+            const marketIndicatorHtml = `<div class="flex items-center gap-2"><div class="market-indicator-stacked ${marketColor}"><span class="text-xs opacity-80">MKT</span><span>${marketSign}${marketPct}%</span></div>${marketArrowSVG}</div>`;
+            let plIndicatorHtml = '';
+            if (playerItem && playerItem.avgCost > 0) {
+                const spreadPerUnit = sellPrice - playerItem.avgCost;
+                if (Math.abs(spreadPerUnit) > 0.01) {
+                    const plPct = playerItem.avgCost > 0 ? Math.round((spreadPerUnit / playerItem.avgCost) * 100) : 0;
+                    const plColor = spreadPerUnit >= 0 ? 'text-green-400' : 'text-red-400';
+                    const plSign = plPct > 0 ? '+' : '';
+                    let plArrowSVG = this._getArrowSvg(spreadPerUnit > 0 ? 'up' : 'down');
+                    plIndicatorHtml = `<div class="flex items-center gap-2"><div class="market-indicator-stacked ${plColor}"><span class="text-xs opacity-80">P/L</span><span>${plSign}${plPct}%</span></div>${plArrowSVG}</div>`;
+                }
+            }
+            return { marketIndicatorHtml, plIndicatorHtml };
         }
-        return { marketIndicatorHtml, plIndicatorHtml };
     }
 
     _getArrowSvg(direction) {
@@ -560,11 +575,16 @@ export class UIManager {
                         <div>Journey Time: ${travelInfo.time} Days</div>
                         <div><span class="font-bold text-sky-300">Fuel Expended: ${travelInfo.fuelCost}</span></div>
                     </div>`;
-                hullDamageText.className = 'text-sm font-roboto-mono mt-1 font-bold text-green-300';
-                hullDamageText.innerHTML = totalHullDamagePercent > 0.01 ? `Hull Integrity -${totalHullDamagePercent.toFixed(2)}%` : '';
-                if (this.isMobile && totalHullDamagePercent > 0.01) {
-                     infoText.querySelector('div').appendChild(hullDamageText);
+                hullDamageText.className = 'text-sm font-roboto-mono mt-1 font-bold text-red-400';
+                if (totalHullDamagePercent > 0.01) {
+                    hullDamageText.innerHTML = `Hull Integrity -${totalHullDamagePercent.toFixed(2)}%`;
+                    if (this.isMobile) {
+                        infoText.querySelector('div').appendChild(hullDamageText);
+                    }
+                } else {
+                    hullDamageText.innerHTML = '';
                 }
+                
                 arrivalLore.style.opacity = 1;
                 progressContainer.classList.add('hidden');
                 readoutContainer.classList.remove('hidden');
@@ -715,7 +735,6 @@ export class UIManager {
         }, duration);
     }
     
-    // START: ADDED GRAPH FUNCTIONS
     showGraph(anchorEl, gameState) {
         this.activeGraphAnchor = anchorEl;
         const tooltip = this.cache.graphTooltip;
@@ -744,26 +763,72 @@ export class UIManager {
         if (!this.activeGraphAnchor) return;
         const tooltip = this.cache.graphTooltip;
         if (tooltip.style.display === 'none') return;
+        
         const rect = this.activeGraphAnchor.getBoundingClientRect();
         const tooltipWidth = tooltip.offsetWidth;
         const tooltipHeight = tooltip.offsetHeight;
         let leftPos, topPos;
-        if (this.activeGraphAnchor.dataset.action === 'show-finance-graph') {
-            leftPos = rect.left - tooltipWidth - 10;
-            topPos = rect.top + (rect.height / 2) - (tooltipHeight / 2);
+        
+        if (this.isMobile) {
+            leftPos = (window.innerWidth / 2) - (tooltipWidth / 2);
+            topPos = rect.top - tooltipHeight - 10;
+             if (topPos < 10) {
+                topPos = rect.bottom + 10;
+            }
         } else {
-            leftPos = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-            topPos = rect.bottom + 5;
-        }
-        if (leftPos < 10) leftPos = 10;
-        if (leftPos + tooltipWidth > window.innerWidth) leftPos = window.innerWidth - tooltipWidth - 10;
-        if (topPos + tooltipHeight > window.innerHeight) topPos = rect.top - tooltipHeight - 5;
-        if (topPos < 10) topPos = 10;
-
-        if (this.isMobile && this.activeGraphAnchor.closest('.cargo-item-tooltip')) {
-            leftPos = 10;
+            if (this.activeGraphAnchor.dataset.action === 'show-finance-graph') {
+                leftPos = rect.left - tooltipWidth - 10;
+                topPos = rect.top + (rect.height / 2) - (tooltipHeight / 2);
+            } else {
+                leftPos = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+                topPos = rect.bottom + 5;
+            }
         }
         
+        if (leftPos < 10) leftPos = 10;
+        if (leftPos + tooltipWidth > window.innerWidth) leftPos = window.innerWidth - tooltipWidth - 10;
+        if (topPos < 10) topPos = 10;
+        if (topPos + tooltipHeight > window.innerHeight) topPos = rect.top - tooltipHeight - 5;
+        
+        tooltip.style.left = `${leftPos}px`;
+        tooltip.style.top = `${topPos}px`;
+    }
+
+    showGenericTooltip(anchorEl, content) {
+        this.activeGenericTooltipAnchor = anchorEl;
+        const tooltip = this.cache.genericTooltip;
+        tooltip.innerHTML = content;
+        tooltip.style.display = 'block';
+        this.updateGenericTooltipPosition();
+    }
+
+    hideGenericTooltip() {
+        if (this.activeGenericTooltipAnchor) {
+            this.cache.genericTooltip.style.display = 'none';
+            this.activeGenericTooltipAnchor = null;
+        }
+    }
+
+    updateGenericTooltipPosition() {
+        if (!this.activeGenericTooltipAnchor) return;
+        const tooltip = this.cache.genericTooltip;
+        const rect = this.activeGenericTooltipAnchor.getBoundingClientRect();
+        const tooltipWidth = tooltip.offsetWidth;
+        const tooltipHeight = tooltip.offsetHeight;
+
+        let leftPos = (window.innerWidth / 2) - (tooltipWidth / 2); // Center horizontally on mobile
+        let topPos = rect.top - tooltipHeight - 10; // Position above by default
+
+        if (topPos < 10) { // If it's off the top, move it below
+            topPos = rect.bottom + 10;
+        }
+        if (leftPos < 10) { // Ensure it's not off the left edge
+            leftPos = 10;
+        }
+        if (leftPos + tooltipWidth > window.innerWidth) { // Ensure it's not off the right edge
+            leftPos = window.innerWidth - tooltipWidth - 10;
+        }
+
         tooltip.style.left = `${leftPos}px`;
         tooltip.style.top = `${topPos}px`;
     }
@@ -813,5 +878,4 @@ export class UIManager {
         });
         return `<svg id="finance-graph-svg" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="100%" height="100%" fill="#0c101d" /><polyline fill="none" stroke="#60a5fa" stroke-width="2.5" points="${financePoints}" style="filter: url(#glow);" />${pointsHtml}<text x="${width / 2}" y="${padding.top - 5}" fill="#d0d8e8" font-size="10" font-family="Roboto Mono" text-anchor="middle">Finance</text></svg>`;
     }
-    // END: ADDED GRAPH FUNCTIONS
 }
