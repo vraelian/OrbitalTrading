@@ -570,11 +570,17 @@ export class UIManager {
         if (this.modalQueue.length === 0) return;
         const { modalId, title, description, callback, options } = this.modalQueue.shift();
         const modal = document.getElementById(modalId);
-        if (!modal) return this.processModalQueue();
+        if (!modal) {
+            console.error(`Modal with ID ${modalId} not found.`);
+            return this.processModalQueue();
+        }
+
         const titleEl = modal.querySelector('#' + modalId.replace('-modal', '-title'));
-        const descEl = modal.querySelector('#' + modalId.replace('-modal', '-description'));
+        const descEl = modal.querySelector('#' + modalId.replace('-modal', '-description')) || modal.querySelector('#' + modalId.replace('-modal', '-scenario'));
+        
         if(titleEl) titleEl.innerHTML = title;
         if(descEl) descEl.innerHTML = description;
+
         const closeHandler = () => {
             modal.classList.add('modal-hiding');
             modal.addEventListener('animationend', () => {
@@ -584,45 +590,48 @@ export class UIManager {
                 this.processModalQueue();
             }, { once: true });
         };
-        const btnContainer = modal.querySelector('#' + modalId.replace('-modal', '-button-container'));
-        let button;
-        if (btnContainer) {
-            btnContainer.innerHTML = '';
-            button = document.createElement('button');
-            btnContainer.appendChild(button);
+
+        if (options.customSetup) {
+            options.customSetup(modal, closeHandler);
         } else {
-            button = modal.querySelector('#' + modalId.replace('-modal', '-ok-button'));
+            const btnContainer = modal.querySelector('#' + modalId.replace('-modal', '-button-container'));
+            let button;
+            if (btnContainer) {
+                btnContainer.innerHTML = '';
+                button = document.createElement('button');
+                btnContainer.appendChild(button);
+            } else {
+                button = modal.querySelector('#' + modalId.replace('-modal', '-ok-button'));
+            }
+            if (button) {
+                button.className = 'btn px-6 py-2';
+                if (options.buttonClass) button.classList.add(options.buttonClass);
+                button.innerHTML = options.buttonText || 'Understood';
+                button.onclick = closeHandler;
+            }
         }
-        if (button) {
-            button.className = 'btn px-6 py-2';
-            if (options.buttonClass) button.classList.add(options.buttonClass);
-            button.innerHTML = options.buttonText || 'Understood';
-            button.onclick = closeHandler;
-        }
+        
         modal.classList.remove('hidden');
         modal.classList.add('modal-visible');
     }
 
     showRandomEventModal(event, choicesCallback) {
-        const modal = document.getElementById('random-event-modal');
-        const titleEl = document.getElementById('random-event-title');
-        const scenarioEl = document.getElementById('random-event-scenario');
-        const choicesContainer = document.getElementById('random-event-choices-container');
-        titleEl.innerHTML = event.title;
-        scenarioEl.innerHTML = event.scenario;
-        choicesContainer.innerHTML = '';
-        event.choices.forEach((choice, index) => {
-            const button = document.createElement('button');
-            button.className = 'btn w-full text-left p-4 hover:bg-slate-700';
-            button.innerHTML = choice.title;
-            button.onclick = () => {
-                this.hideModal('random-event-modal');
-                choicesCallback(event.id, index);
-            };
-            choicesContainer.appendChild(button);
+        this.queueModal('random-event-modal', event.title, event.scenario, null, {
+            customSetup: (modal, closeHandler) => {
+                const choicesContainer = modal.querySelector('#random-event-choices-container');
+                choicesContainer.innerHTML = '';
+                event.choices.forEach((choice, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'btn w-full text-left p-4 hover:bg-slate-700';
+                    button.innerHTML = choice.title;
+                    button.onclick = () => {
+                        choicesCallback(event.id, index);
+                        closeHandler();
+                    };
+                    choicesContainer.appendChild(button);
+                });
+            }
         });
-        modal.classList.remove('hidden');
-        modal.classList.add('modal-visible');
     }
 
     showAgeEventModal(event, choiceCallback) {
@@ -652,6 +661,9 @@ export class UIManager {
             modal.addEventListener('animationend', () => {
                 modal.classList.add('hidden');
                 modal.classList.remove('modal-hiding');
+                if (this.modalQueue.length > 0 && !document.querySelector('.modal-backdrop:not(.hidden)')) {
+                    this.processModalQueue();
+                }
             }, { once: true });
         }
     }
@@ -729,7 +741,7 @@ export class UIManager {
 
     _renderPriceGraph(goodId, gameState, playerItem) {
         const history = gameState.market.priceHistory[gameState.currentLocationId]?.[goodId];
-        if (!history || history.length < 2) return `<div class="text-gray-400 text-sm p-4">Not enough local price history.</div>`;
+        if (!history || history.length < 2) return `<div class="text-gray-400 text-sm p-4">Check back next week!!</div>`;
         const good = COMMODITIES.find(c => c.id === goodId);
         const staticAvg = (good.basePriceRange[0] + good.basePriceRange[1]) / 2;
         const width = 280, height = 140, padding = 35;
@@ -754,7 +766,7 @@ export class UIManager {
 
     _renderFinanceGraph(gameState) {
         const history = gameState.player.financeHistory;
-        if (!history || history.length < 2) return `<div class="text-gray-400 text-sm p-4">Not enough finance history.</div>`;
+        if (!history || history.length < 2) return `<div class="text-gray-400 text-sm p-4">Check back here tomorrow!</div>`;
         const width = 300, height = 140, padding = { top: 20, right: 25, bottom: 20, left: 10 };
         const financeData = history.map(p => p.value);
         const minVal = Math.min(...financeData), maxVal = Math.max(...financeData);

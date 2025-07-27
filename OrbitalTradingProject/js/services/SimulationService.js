@@ -178,7 +178,10 @@ export class SimulationService {
 
     buyShip(shipId) {
         const ship = SHIPS[shipId];
-        if (this.gameState.player.credits < ship.price) { this.uiManager.queueModal('event-modal', "Insufficient Funds", "You cannot afford this ship."); return false; }
+        if (this.gameState.player.credits < ship.price) {
+            this.uiManager.queueModal('event-modal', "Insufficient Funds", "You cannot afford this ship.");
+            return false;
+        }
         
         this.gameState.player.credits -= ship.price;
         this._recordFinanceTransaction('ship', -ship.price);
@@ -194,8 +197,14 @@ export class SimulationService {
 
     sellShip(shipId) {
         const state = this.gameState.getState();
-        if (state.player.ownedShipIds.length <= 1) { this.uiManager.queueModal('event-modal', "Action Blocked", "You cannot sell your last remaining ship."); return false; }
-        if (shipId === state.player.activeShipId) { this.uiManager.queueModal('event-modal', "Action Blocked", "You cannot sell your active ship."); return false; }
+        if (state.player.ownedShipIds.length <= 1) {
+            this.uiManager.queueModal('event-modal', "Action Blocked", "You cannot sell your last remaining ship.");
+            return false;
+        }
+        if (shipId === state.player.activeShipId) {
+            this.uiManager.queueModal('event-modal', "Action Blocked", "You cannot sell your active ship.");
+            return false;
+        }
         if (calculateInventoryUsed(state.player.inventories[shipId]) > 0) {
             this.uiManager.queueModal('event-modal', 'Cannot Sell Ship', 'This vessel\'s cargo hold is not empty.');
             return false;
@@ -224,7 +233,10 @@ export class SimulationService {
     payOffDebt() {
         if (this.gameState.isGameOver) return;
         const { player } = this.gameState;
-        if (player.credits < player.debt) { this.uiManager.queueModal('event-modal', "Insufficient Funds", "You can't afford to pay off your entire debt."); return; }
+        if (player.credits < player.debt) {
+            this.uiManager.queueModal('event-modal', "Insufficient Funds", "You can't afford to pay off your entire debt.");
+            return;
+        }
 
         if (player.debt > 0 && !player.initialDebtPaidOff) {
             const msg = `Captain ${player.name}, your strategic trading has put us on a path to success. The crew's morale is high.<br><br>The <span class='hl'>Starport</span> is now accessible!`;
@@ -246,8 +258,14 @@ export class SimulationService {
     
     takeLoan(loanData) {
         const { player, day } = this.gameState;
-        if (player.debt > 0) { this.uiManager.queueModal('event-modal', "Loan Unavailable", `You must pay off your existing debt first.`); return; }
-        if (player.credits < loanData.fee) { this.uiManager.queueModal('event-modal', "Unable to Secure Loan", `The financing fee is ${formatCredits(loanData.fee)}, but you only have ${formatCredits(player.credits)}.`); return; }
+        if (player.debt > 0) {
+            this.uiManager.queueModal('event-modal', "Loan Unavailable", `You must pay off your existing debt first.`);
+            return;
+        }
+        if (player.credits < loanData.fee) {
+            this.uiManager.queueModal('event-modal', "Unable to Secure Loan", `The financing fee is ${formatCredits(loanData.fee)}, but you only have ${formatCredits(player.credits)}.`);
+            return;
+        }
 
         player.credits -= loanData.fee;
         this._recordFinanceTransaction('loan', -loanData.fee);
@@ -265,7 +283,10 @@ export class SimulationService {
 
     purchaseIntel(cost) {
         const { player, currentLocationId, day } = this.gameState;
-        if (player.credits < cost) { this.uiManager.queueModal('event-modal', "Insufficient Funds", "You can't afford this intel."); return; }
+        if (player.credits < cost) {
+            this.uiManager.queueModal('event-modal', "Insufficient Funds", "You can't afford this intel.");
+            return;
+        }
         
         player.credits -= cost;
         this._recordFinanceTransaction('intel', -cost);
@@ -280,8 +301,11 @@ export class SimulationService {
         
         if (commodity) {
             this.gameState.intel.active = { 
-                targetMarketId: targetMarket.id, commodityId: commodity.id, 
-                type: 'demand', startDay: day, endDay: day + 100 
+                targetMarketId: targetMarket.id,
+                commodityId: commodity.id, 
+                type: 'demand',
+                startDay: day,
+                endDay: day + 100 
             };
         }
         this.gameState.setState({});

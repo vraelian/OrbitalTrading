@@ -44,7 +44,7 @@ export class GameState {
     setState(partialState) {
         Object.assign(this, partialState);
         this._notify();
-        this.saveGame();
+        // this.saveGame();
     }
     
     getState() {
@@ -52,30 +52,31 @@ export class GameState {
     }
 
     saveGame() {
-        try {
-            const stateToSave = { ...this };
-            delete stateToSave.subscribers;
-            localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(stateToSave));
-        } catch (error) {
-            console.error("Error saving game state:", error);
-        }
+        // try {
+        //     const stateToSave = { ...this };
+        //     delete stateToSave.subscribers;
+        //     localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(stateToSave));
+        // } catch (error) {
+        //     console.error("Error saving game state:", error);
+        // }
     }
 
     loadGame() {
-        try {
-            const serializedState = localStorage.getItem(CONFIG.SAVE_KEY);
-            if (serializedState === null) return false;
+        return false;
+        // try {
+        //     const serializedState = localStorage.getItem(CONFIG.SAVE_KEY);
+        //     if (serializedState === null) return false;
             
-            const loadedState = JSON.parse(serializedState);
-            Object.assign(this, loadedState);
-            this.TRAVEL_DATA = procedurallyGenerateTravelData(MARKETS);
-            this._notify();
-            return true;
-        } catch (error) {
-            console.warn("Could not parse save data. Starting new game.", error);
-            localStorage.removeItem(CONFIG.SAVE_KEY);
-            return false;
-        }
+        //     const loadedState = JSON.parse(serializedState);
+        //     Object.assign(this, loadedState);
+        //     this.TRAVEL_DATA = procedurallyGenerateTravelData(MARKETS);
+        //     this._notify();
+        //     return true;
+        // } catch (error) {
+        //     console.warn("Could not parse save data. Starting new game.", error);
+        //     localStorage.removeItem(CONFIG.SAVE_KEY);
+        //     return false;
+        // }
     }
 
     startNewGame(playerName) {
