@@ -39,6 +39,10 @@ export class EventManager {
                  this.uiManager.renderMarketView(this.gameState.getState());
              }
         });
+
+        // Tooltip dismissal on mobile
+        document.body.addEventListener('touchstart', () => this.uiManager.hideGraph(), { passive: true });
+        window.addEventListener('scroll', () => this.uiManager.hideGraph(), { passive: true });
     }
 
     _handleClick(e) {
@@ -80,6 +84,9 @@ export class EventManager {
                 case 'pay-debt': this.simulationService.payOffDebt(); break;
                 case 'take-loan': this.simulationService.takeLoan(JSON.parse(loanDetails)); break;
                 case 'purchase-intel': this.simulationService.purchaseIntel(parseInt(cost)); break;
+                case 'show-starport-locked-toast':
+                    this.uiManager.showToast('starport-unlock-tooltip', "Pay off your initial loan to access the Starport!");
+                    break;
                 
                 case 'buy': case 'sell': {
                     const qtyInput = document.getElementById(`qty-${goodId}`) || document.getElementById(`qty-${goodId}-mobile`);
@@ -126,6 +133,7 @@ export class EventManager {
     }
 
     _handleMouseOver(e) {
+        if (window.innerWidth <= 768) return;
         const graphTarget = e.target.closest('[data-action="show-price-graph"], [data-action="show-finance-graph"]');
         if (graphTarget) {
             this.uiManager.showGraph(graphTarget, this.gameState.getState());
@@ -133,6 +141,7 @@ export class EventManager {
     }
 
     _handleMouseOut(e) {
+        if (window.innerWidth <= 768) return;
         const graphTarget = e.target.closest('[data-action="show-price-graph"], [data-action="show-finance-graph"]');
         if (graphTarget) {
             this.uiManager.hideGraph();
@@ -213,7 +222,9 @@ export class EventManager {
         const cost = this.simulationService.refuelTick();
         if (cost > 0) {
             const rect = buttonElement.getBoundingClientRect();
-            this.uiManager.createFloatingText(`-${formatCredits(cost, false)}`, rect.left + rect.width / 2, rect.top, '#f87171');
+            const x = rect.left + (rect.width / 2) + (Math.random() * 40 - 20);
+            const y = rect.top + (Math.random() * 20 - 10);
+            this.uiManager.createFloatingText(`-${formatCredits(cost, false)}`, x, y, '#f87171');
         } else {
             this._stopRefueling();
         }
@@ -234,7 +245,9 @@ export class EventManager {
         const cost = this.simulationService.repairTick();
         if (cost > 0) {
             const rect = buttonElement.getBoundingClientRect();
-            this.uiManager.createFloatingText(`-${formatCredits(cost, false)}`, rect.left + rect.width / 2, rect.top, '#f87171');
+            const x = rect.left + (rect.width / 2) + (Math.random() * 40 - 20);
+            const y = rect.top + (Math.random() * 20 - 10);
+            this.uiManager.createFloatingText(`-${formatCredits(cost, false)}`, x, y, '#f87171');
         } else {
             this._stopRepairing();
         }

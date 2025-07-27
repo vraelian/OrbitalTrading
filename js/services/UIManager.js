@@ -33,6 +33,7 @@ export class UIManager {
             marketPrices: document.getElementById('market-prices'),
             locationsGrid: document.getElementById('locations-grid'),
             inventoryList: document.getElementById('inventory-list'),
+            inventoryTitle: document.getElementById('inventory-title'),
             servicesCreditMirror: document.getElementById('services-credit-mirror'),
             debtContainer: document.getElementById('debt-container'),
             fuelPrice: document.getElementById('fuel-price'),
@@ -49,6 +50,7 @@ export class UIManager {
             garnishmentToast: document.getElementById('garnishment-toast'),
             hullWarningToast: document.getElementById('hull-warning-toast'),
             debugToast: document.getElementById('debug-toast'),
+            starportUnlockTooltip: document.getElementById('starport-unlock-tooltip'),
             graphTooltip: document.getElementById('graph-tooltip'),
         };
     }
@@ -87,15 +89,19 @@ export class UIManager {
         const buttons = [
             { id: 'market-button', view: 'market-view', label: 'Market' },
             { id: 'travel-button', view: 'travel-view', label: 'Travel' },
-            { id: 'starport-button', view: 'starport-view', label: 'Starport', disabled: !starportUnlocked }
+            { id: 'starport-button', view: 'starport-view', label: 'Starport', locked: !starportUnlocked }
         ];
-        this.cache.headerNavButtons.innerHTML = buttons.map(btn => `
-            <button id="${btn.id}" data-action="set-view" data-view-id="${btn.view}" 
+        this.cache.headerNavButtons.innerHTML = buttons.map(btn => {
+            const action = btn.locked ? 'show-starport-locked-toast' : 'set-view';
+            const viewData = btn.locked ? '' : `data-view-id="${btn.view}"`;
+            const isDisabled = currentView === btn.view && !btn.locked;
+            return `
+            <button id="${btn.id}" data-action="${action}" ${viewData} 
                     class="btn btn-header ${currentView === btn.view ? 'btn-header-active' : ''}" 
-                    ${currentView === btn.view || btn.disabled ? 'disabled' : ''}>
+                    ${isDisabled ? 'disabled' : ''}>
                 ${btn.label}
             </button>
-        `).join('');
+        `}).join('');
     }
     
     renderHUD(gameState) {
@@ -148,6 +154,13 @@ export class UIManager {
             document.getElementById(viewId).style.display = 'none';
         });
         document.getElementById(gameState.currentView).style.display = 'block';
+
+        if (this.isMobile) {
+            this.cache.inventoryTitle.textContent = "Cargo Manifest";
+        } else {
+            this.cache.inventoryTitle.textContent = "Active Ship Cargo Manifest";
+        }
+
         if (gameState.currentView === 'market-view') this.renderMarketView(gameState);
         if (gameState.currentView === 'travel-view') this.renderTravelView(gameState);
         if (gameState.currentView === 'starport-view') this.renderStarportView(gameState);
@@ -538,7 +551,11 @@ export class UIManager {
             } else {
                 statusText.textContent = `Arrived at ${to.name}`;
                 arrivalLore.innerHTML = to.arrivalLore || "You have arrived.";
-                infoText.innerHTML = `Journey Time: ${travelInfo.time} Days | <span class="font-bold text-sky-300">Fuel Expended: ${travelInfo.fuelCost}</span>`;
+                infoText.innerHTML = `
+                    <div class="text-center">
+                        <div>Journey Time: ${travelInfo.time} Days</div>
+                        <div><span class="font-bold text-sky-300">Fuel Expended: ${travelInfo.fuelCost}</span></div>
+                    </div>`;
                 hullDamageText.className = 'text-sm font-roboto-mono mt-1 font-bold text-green-300';
                 hullDamageText.innerHTML = totalHullDamagePercent > 0.01 ? `Hull Integrity -${totalHullDamagePercent.toFixed(2)}%` : '';
                 arrivalLore.style.opacity = 1;
@@ -735,6 +752,11 @@ export class UIManager {
         if (leftPos + tooltipWidth > window.innerWidth) leftPos = window.innerWidth - tooltipWidth - 10;
         if (topPos + tooltipHeight > window.innerHeight) topPos = rect.top - tooltipHeight - 5;
         if (topPos < 10) topPos = 10;
+
+        if (this.isMobile && this.activeGraphAnchor.closest('.cargo-item-tooltip')) {
+            leftPos = 10;
+        }
+        
         tooltip.style.left = `${leftPos}px`;
         tooltip.style.top = `${topPos}px`;
     }
