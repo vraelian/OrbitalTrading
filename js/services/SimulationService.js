@@ -1,4 +1,4 @@
-// vraelian/orbitaltrading/OrbitalTrading-5eb328469e4a16136fdedcb7fc35b224fdd6e2f9/OrbitalTradingProject/js/services/SimulationService.js
+// js/services/SimulationService.js
 import { CONFIG } from '../data/config.js';
 import { SHIPS, COMMODITIES, MARKETS, RANDOM_EVENTS, AGE_EVENTS, PERKS } from '../data/gamedata.js';
 import { DATE_CONFIG } from '../data/dateConfig.js';
@@ -8,16 +8,18 @@ export class SimulationService {
     constructor(gameState, uiManager) {
         this.gameState = gameState;
         this.uiManager = uiManager;
+        this.tutorialService = null; // Will be set later
+    }
+
+    setTutorialService(tutorialService) {
+        this.tutorialService = tutorialService;
     }
 
     setView(viewId) {
-        if (viewId === 'starport-view' && !this.gameState.tutorials.starport) {
-            const desc = `This is the starport where you can purchase ships from the <span class="hl">Shipyard</span> and manage them in your <span class="hl">Hangar</span>.<br><br>Other stations offer different ships, but you can <span class="hl">access your hangar from any station.</span>`;
-            setTimeout(() => {
-                this.uiManager.queueModal('tutorial-modal', 'Ship Management', desc, () => { this.gameState.tutorials.starport = true; });
-            }, 1000);
-        }
         this.gameState.setState({ currentView: viewId });
+        if (this.tutorialService) {
+            this.tutorialService.checkState({ type: 'VIEW_LOAD', viewId: viewId });
+        }
     }
 
     travelTo(locationId) {
@@ -240,9 +242,7 @@ export class SimulationService {
 
         if (player.debt > 0 && !player.initialDebtPaidOff) {
             const msg = `Captain ${player.name}, your strategic trading has put us on a path to success. The crew's morale is high.<br><br>The <span class='hl'>Starport</span> is now accessible!`;
-            this.uiManager.queueModal('tutorial-modal', 'Crew Commendation', msg, () => {
-                this.gameState.tutorials.success = true;
-            }, { tutorialType: 'success' });
+            this.uiManager.queueModal('event-modal', 'Crew Commendation', msg, null, { buttonText: 'Excellent!' });
             player.starportUnlocked = true;
             player.initialDebtPaidOff = true;
         }
@@ -323,7 +323,7 @@ export class SimulationService {
         if (state.player.credits < costPerTick) return 0;
 
         state.player.credits -= costPerTick;
-        state.player.shipStates[ship.id].fuel = Math.min(ship.maxFuel, ship.fuel + 2.5);
+        state.player.shipStates[ship.id].fuel = Math.min(ship.maxFuel, state.player.shipStates[ship.id].fuel + 2.5);
         this._recordFinanceTransaction('fuel', -costPerTick);
         this.gameState.setState({});
         return costPerTick;
@@ -341,7 +341,7 @@ export class SimulationService {
         if (state.player.credits < costPerTick) return 0;
         
         state.player.credits -= costPerTick;
-        state.player.shipStates[ship.id].health = Math.min(ship.maxHealth, ship.health + (ship.maxHealth * (CONFIG.REPAIR_AMOUNT_PER_TICK / 100)));
+        state.player.shipStates[ship.id].health = Math.min(ship.maxHealth, state.player.shipStates[ship.id].health + (ship.maxHealth * (CONFIG.REPAIR_AMOUNT_PER_TICK / 100)));
         this._recordFinanceTransaction('repair', -costPerTick);
         this._checkHullWarnings(ship.id);
         this.gameState.setState({});
@@ -567,7 +567,7 @@ export class SimulationService {
                     changed = true;
                 }
                 if (changed) {
-                    this.uiManager.queueModal('tutorial-modal', 'Reputation Growth', message);
+                    this.uiManager.queueModal('event-modal', 'Reputation Growth', message);
                 }
             }
         });
@@ -626,10 +626,7 @@ export class SimulationService {
         Make the most of it! <span class="hl">Grow your wealth,</span> pay off your <span class="hl-red">debts,</span> and unlock new opportunities at the system's starports.`;
         
         this.uiManager.queueModal('event-modal', introTitle, introDesc, () => {
-            if (this.gameState.currentView === 'travel-view' && !this.gameState.tutorials.navigation) {
-                const navDesc = `This is the navigational interface. <br>From here you may fly to other stations to <span class="hl">trade cargo</span> throughout the solar system.<br><br>Traveling between stations consumes <span class='hl-blue pulse-blue-glow'>fuel</span> and  wears down your vessel's <span class='hl-green pulse-green-glow'>hull</span>. Both can be restored at any station. Flying with a poorly maintained ship is <span class="hl-red">dangerous</span>. <br><br>You are currently docked at <span class="hl">Mars</span>.`;
-                this.uiManager.queueModal('tutorial-modal', 'Navigation', navDesc, () => { this.gameState.tutorials.navigation = true; }, { tutorialType: 'navigation', buttonText: 'Return to Navigation' });
-            }
+            // This is where the old tutorial was, it's no longer needed.
         }, { buttonText: "Embark on the " + starterShip.name, buttonClass: "btn-pulse" });
     }
 

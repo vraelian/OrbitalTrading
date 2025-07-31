@@ -1,6 +1,6 @@
 // js/services/UIManager.js
 import { CONFIG } from '../data/config.js';
-import { SHIPS, COMMODITIES, MARKETS, LOCATION_VISUALS, PERKS } from '../data/gamedata.js';
+import { SHIPS, COMMODITIES, MARKETS, LOCATION_VISUALS, PERKS, TUTORIAL_DATA } from '../data/gamedata.js';
 import { formatCredits, calculateInventoryUsed, getDateFromDay } from '../utils.js';
 
 export class UIManager {
@@ -9,6 +9,7 @@ export class UIManager {
         this.modalQueue = [];
         this.activeGraphAnchor = null;
         this.activeGenericTooltipAnchor = null;
+        this.activeTutorialHighlight = null;
         this._cacheDOM();
 
         window.addEventListener('resize', () => {
@@ -54,6 +55,17 @@ export class UIManager {
             starportUnlockTooltip: document.getElementById('starport-unlock-tooltip'),
             graphTooltip: document.getElementById('graph-tooltip'),
             genericTooltip: document.getElementById('generic-tooltip'),
+
+            // Tutorial System Elements
+            tutorialToastContainer: document.getElementById('tutorial-toast-container'),
+            tutorialToastText: document.getElementById('tutorial-toast-text'),
+            tutorialToastSkipBtn: document.getElementById('tutorial-toast-skip-btn'),
+            tutorialToastNextBtn: document.getElementById('tutorial-toast-next-btn'),
+            skipTutorialModal: document.getElementById('skip-tutorial-modal'),
+            skipTutorialConfirmBtn: document.getElementById('skip-tutorial-confirm-btn'),
+            skipTutorialCancelBtn: document.getElementById('skip-tutorial-cancel-btn'),
+            tutorialLogModal: document.getElementById('tutorial-log-modal'),
+            tutorialLogList: document.getElementById('tutorial-log-list'),
         };
     }
 
@@ -626,13 +638,9 @@ export class UIManager {
         if(descEl) descEl.innerHTML = description;
 
         const closeHandler = () => {
-            modal.classList.add('modal-hiding');
-            modal.addEventListener('animationend', () => {
-                modal.classList.add('hidden');
-                modal.classList.remove('modal-hiding');
-                if (callback) callback();
-                this.processModalQueue();
-            }, { once: true });
+            this.hideModal(modalId);
+            if (callback) callback();
+            this.processModalQueue();
         };
 
         if (options.customSetup) {
@@ -645,7 +653,7 @@ export class UIManager {
                 button = document.createElement('button');
                 btnContainer.appendChild(button);
             } else {
-                button = modal.querySelector('#' + modalId.replace('-modal', '-ok-button'));
+                 button = modal.querySelector('button');
             }
             if (button) {
                 button.className = 'btn px-6 py-2';
@@ -877,5 +885,95 @@ export class UIManager {
             pointsHtml += `<g><circle class="graph-point" cx="${x}" cy="${y}" r="4" fill="${config.color}" stroke="#0c101d" stroke-width="2" /><text x="${x}" y="${y - 8}" fill="${config.color}" font-size="9" font-family="Roboto Mono" text-anchor="middle" style="pointer-events: none;">${config.label}</text></g>`;
         });
         return `<svg id="finance-graph-svg" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="100%" height="100%" fill="#0c101d" /><polyline fill="none" stroke="#60a5fa" stroke-width="2.5" points="${financePoints}" style="filter: url(#glow);" />${pointsHtml}<text x="${width / 2}" y="${padding.top - 5}" fill="#d0d8e8" font-size="10" font-family="Roboto Mono" text-anchor="middle">Finance</text></svg>`;
+    }
+
+    // --- Tutorial System Methods ---
+
+    showTutorialToast({ step, onSkip, onNext }) {
+        const { text, highlightElementId, position, size, completion } = step;
+        const toast = this.cache.tutorialToastContainer;
+        
+        this.cache.tutorialToastText.innerHTML = text;
+        this.applyTutorialHighlight(highlightElementId);
+
+        // Positioning
+        toast.className = 'hidden fixed p-4 rounded-lg shadow-2xl transition-all duration-300 pointer-events-auto'; // Reset classes
+        toast.classList.add(`tt-${this.isMobile ? 'mobile' : position.desktop}`);
+        
+        // Size
+        toast.style.width = size?.width || 'auto';
+
+        toast.classList.remove('hidden');
+        
+        // Button visibility and actions
+        const isInfoStep = completion.type === 'INFO';
+        this.cache.tutorialToastNextBtn.style.display = isInfoStep ? 'inline-block' : 'inline-block'; // Always show for now
+        this.cache.tutorialToastNextBtn.onclick = onNext;
+        this.cache.tutorialToastSkipBtn.onclick = onSkip;
+    }
+
+    hideTutorialToast() {
+        this.cache.tutorialToastContainer.classList.add('hidden');
+        this.applyTutorialHighlight(null); // Remove any active highlight
+    }
+    
+    applyTutorialHighlight(elementId) {
+        // Remove from previous element
+        if (this.activeTutorialHighlight) {
+            this.activeTutorialHighlight.classList.remove('tutorial-highlight');
+        }
+
+        // Add to new element
+        if (elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.classList.add('tutorial-highlight');
+                this.activeTutorialHighlight = element;
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else {
+            this.activeTutorialHighlight = null;
+        }
+    }
+
+    showSkipTutorialModal(onConfirm) {
+        const modal = this.cache.skipTutorialModal;
+        modal.classList.remove('hidden');
+        
+        const confirmHandler = () => {
+            onConfirm();
+            this.hideModal('skip-tutorial-modal');
+        };
+
+        const cancelHandler = () => {
+            this.hideModal('skip-tutorial-modal');
+        };
+
+        this.cache.skipTutorialConfirmBtn.onclick = confirmHandler;
+        this.cache.skipTutorialCancelBtn.onclick = cancelHandler;
+    }
+
+    showTutorialLogModal({ seenBatches, onSelect }) {
+        const logModal = this.cache.tutorialLogModal;
+        const list = this.cache.tutorialLogList;
+        list.innerHTML = ''; // Clear previous entries
+
+        if (seenBatches.length === 0) {
+            list.innerHTML = `<li class="text-gray-400 p-2 text-center">No tutorials viewed yet.</li>`;
+        } else {
+            seenBatches.forEach(batchId => {
+                const batchData = TUTORIAL_DATA[batchId];
+                if (batchData) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<button class="btn w-full text-center">${batchData.title}</button>`;
+                    li.onclick = () => {
+                        logModal.classList.remove('visible'); // Close the modal first
+                        onSelect(batchId); // Then trigger the tutorial
+                    };
+                    list.appendChild(li);
+                }
+            });
+        }
+        logModal.classList.add('visible');
     }
 }

@@ -3,6 +3,7 @@ import { GameState } from './services/GameState.js';
 import { SimulationService } from './services/SimulationService.js';
 import { UIManager } from './services/UIManager.js';
 import { EventManager } from './services/EventManager.js';
+import { TutorialService } from './services/TutorialService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- App Initialization ---
@@ -51,7 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const gameState = new GameState();
         const uiManager = new UIManager();
         const simulationService = new SimulationService(gameState, uiManager);
-        const eventManager = new EventManager(gameState, simulationService, uiManager);
+        const tutorialService = new TutorialService(gameState, uiManager, simulationService);
+        
+        // Now that all services are created, inject dependencies
+        simulationService.setTutorialService(tutorialService);
+
+        const eventManager = new EventManager(gameState, simulationService, uiManager, tutorialService);
 
         // --- Game Initialization ---
         const hasSave = gameState.loadGame();
@@ -65,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
             uiManager.renderStarportView(gameState.getState());
 
             document.getElementById('travel-view').classList.add('active-view');
-            simulationService.showIntroSequence(); // This is the new line
+            simulationService.showIntroSequence();
         }
 
         // --- Bindings ---
@@ -74,5 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Initial render
         uiManager.render(gameState.getState());
+        tutorialService.checkState({ type: 'VIEW_LOAD', viewId: gameState.currentView });
     }
 });
