@@ -2,6 +2,7 @@
 import { CONFIG } from '../data/config.js';
 import { SHIPS, COMMODITIES, MARKETS, LOCATION_VISUALS, PERKS, TUTORIAL_DATA } from '../data/gamedata.js';
 import { formatCredits, calculateInventoryUsed, getDateFromDay } from '../utils.js';
+import { SCREEN_IDS, NAV_IDS, ACTION_IDS, GAME_RULES, PERK_IDS, LOCATION_IDS } from '../data/constants.js';
 
 export class UIManager {
     constructor() {
@@ -10,44 +11,42 @@ export class UIManager {
         this.activeGraphAnchor = null;
         this.activeGenericTooltipAnchor = null;
         this.activeTutorialHighlight = null;
+        this.navStructure = {
+            [NAV_IDS.SHIP]: { label: 'Ship', screens: { [SCREEN_IDS.STATUS]: 'Status', [SCREEN_IDS.NAVIGATION]: 'Navigation', [SCREEN_IDS.SERVICES]: 'Services' } },
+            [NAV_IDS.STARPORT]: { label: 'Starport', screens: { [SCREEN_IDS.MARKET]: 'Market', [SCREEN_IDS.CARGO]: 'Cargo', [SCREEN_IDS.HANGAR]: 'Hangar' } },
+            [NAV_IDS.ADMIN]: { label: 'Admin', screens: { [SCREEN_IDS.MISSIONS]: 'Missions', [SCREEN_IDS.FINANCE]: 'Finance', [SCREEN_IDS.INTEL]: 'Intel' } }
+        };
         this._cacheDOM();
 
         window.addEventListener('resize', () => {
+            const wasMobile = this.isMobile;
             this.isMobile = window.innerWidth <= 768;
+            if (wasMobile !== this.isMobile) {
+                // Force a full re-render if the mobile breakpoint is crossed
+                this.render(this.lastKnownState);
+            }
         });
     }
 
     _cacheDOM() {
         this.cache = {
             gameContainer: document.getElementById('game-container'),
-            headerTitle: document.getElementById('header-title'),
-            headerSubtitle: document.getElementById('header-subtitle'),
-            headerNavButtons: document.getElementById('header-nav-buttons'),
-            gameDay: document.getElementById('game-day'),
-            gameDate: document.getElementById('game-date-display'),
-            vesselDetails: document.getElementById('vessel-details-container'),
-            shipHealth: document.getElementById('ship-health'),
-            cargoSpace: document.getElementById('player-inventory-space'),
-            shipFuel: document.getElementById('ship-fuel-points'),
-            shipFuelBar: document.getElementById('ship-fuel-bar'),
-            captainInfo: document.getElementById('captain-info-panel'),
-            financePanel: document.getElementById('finance-panel'),
-            marketPrices: document.getElementById('market-prices'),
-            locationsGrid: document.getElementById('locations-grid'),
-            inventoryList: document.getElementById('inventory-list'),
-            inventoryTitle: document.getElementById('inventory-title'),
-            servicesCreditMirror: document.getElementById('services-credit-mirror'),
-            debtContainer: document.getElementById('debt-container'),
-            fuelPrice: document.getElementById('fuel-price'),
-            repairCost: document.getElementById('repair-cost'),
-            repairBtn: document.getElementById('repair-btn'),
-            refuelBtn: document.getElementById('refuel-btn'),
-            intelPurchaseContainer: document.getElementById('intel-purchase-container'),
-            intelDisplay: document.getElementById('intel-display'),
-            playerInventory: document.getElementById('player-inventory'),
-            marketView: document.getElementById('market-view'),
-            travelView: document.getElementById('travel-view'),
-            starportView: document.getElementById('starport-view'),
+            navBar: document.getElementById('nav-bar'),
+            subNavBar: document.getElementById('sub-nav-bar'),
+            stickyBar: document.getElementById('sticky-bar'),
+            
+            // Screen Containers
+            statusScreen: document.getElementById(`${SCREEN_IDS.STATUS}-screen`),
+            navigationScreen: document.getElementById(`${SCREEN_IDS.NAVIGATION}-screen`),
+            servicesScreen: document.getElementById(`${SCREEN_IDS.SERVICES}-screen`),
+            marketScreen: document.getElementById(`${SCREEN_IDS.MARKET}-screen`),
+            cargoScreen: document.getElementById(`${SCREEN_IDS.CARGO}-screen`),
+            hangarScreen: document.getElementById(`${SCREEN_IDS.HANGAR}-screen`),
+            missionsScreen: document.getElementById(`${SCREEN_IDS.MISSIONS}-screen`),
+            financeScreen: document.getElementById(`${SCREEN_IDS.FINANCE}-screen`),
+            intelScreen: document.getElementById(`${SCREEN_IDS.INTEL}-screen`),
+            
+            // Modals and Toasts
             saveToast: document.getElementById('save-toast'),
             garnishmentToast: document.getElementById('garnishment-toast'),
             hullWarningToast: document.getElementById('hull-warning-toast'),
@@ -64,135 +63,440 @@ export class UIManager {
             skipTutorialModal: document.getElementById('skip-tutorial-modal'),
             skipTutorialConfirmBtn: document.getElementById('skip-tutorial-confirm-btn'),
             skipTutorialCancelBtn: document.getElementById('skip-tutorial-cancel-btn'),
-            tutorialLogModal: document.getElementById('tutorial-log-modal'),
-            tutorialLogList: document.getElementById('tutorial-log-list'),
         };
     }
 
     render(gameState) {
         if (!gameState || !gameState.player) return;
+        this.lastKnownState = gameState; // Keep track of the state for re-renders
+        
         const location = MARKETS.find(l => l.id === gameState.currentLocationId);
         if (location) {
             this.cache.gameContainer.className = `game-container p-4 md:p-8 ${location.bg}`;
         }
-        this.renderHeader(gameState);
-        this.renderHUD(gameState);
-        this.renderActiveView(gameState);
-        this.updateLiveStats(gameState);
-    }
-    
-    renderHeader(gameState) {
-        const { currentView, currentLocationId } = gameState;
-        const location = MARKETS.find(l => l.id === currentLocationId);
-        let title = 'System Navigation';
-        let subtitle = 'Select your next destination.';
-        if (currentView === 'market-view' && location) {
-            title = location.name;
-            subtitle = location.description;
-        } else if (currentView === 'starport-view') {
-            title = 'Starport';
-            subtitle = 'Vessel acquisition and fleet management.';
-        }
-        this.cache.headerTitle.textContent = title;
-        this.cache.headerSubtitle.textContent = subtitle;
-        this.renderHeaderNav(gameState);
-    }
-
-    renderHeaderNav(gameState) {
-        const { currentView, player: { starportUnlocked } } = gameState;
-        const buttons = [
-            { id: 'market-button', view: 'market-view', label: 'Market' },
-            { id: 'travel-button', view: 'travel-view', label: 'Travel' },
-            { id: 'starport-button', view: 'starport-view', label: 'Starport', locked: !starportUnlocked }
-        ];
-        this.cache.headerNavButtons.innerHTML = buttons.map(btn => {
-            const action = btn.locked ? 'show-starport-locked-toast' : 'set-view';
-            const viewData = btn.locked ? '' : `data-view-id="${btn.view}"`;
-            const isDisabled = btn.locked || (currentView === btn.view && !btn.locked);
-            return `
-            <button id="${btn.id}" data-action="${action}" ${viewData} 
-                    class="btn btn-header ${currentView === btn.view ? 'btn-header-active' : ''}" 
-                    ${isDisabled ? 'disabled' : ''}>
-                ${btn.label}
-            </button>
-        `}).join('');
-    }
-    
-    renderHUD(gameState) {
-        const { player, day } = gameState;
-        const activeShipId = player.activeShipId;
-        const shipStatic = SHIPS[activeShipId];
-        const shipDynamic = player.shipStates[activeShipId];
-        const inventory = player.inventories[activeShipId];
-        const cargoUsed = calculateInventoryUsed(inventory);
-        this.cache.gameDay.textContent = day;
-        this.cache.gameDate.textContent = getDateFromDay(day);
-        this.cache.vesselDetails.innerHTML = `
-            <div class="text-right">
-                <p class="text-gray-400 text-sm tracking-wider">Vessel</p>
-                <p>${shipStatic.name}</p>
-                <p>Class: ${shipStatic.class}</p>
-            </div>`;
-        this.cache.shipHealth.textContent = `${Math.floor(shipDynamic.health)}%`;
-        this.cache.cargoSpace.textContent = `${cargoUsed}/${shipStatic.cargoCapacity}`;
-        this.cache.shipFuel.textContent = `${Math.floor(shipDynamic.fuel)}/${shipStatic.maxFuel}`;
-        this.cache.shipFuelBar.style.width = `${(shipDynamic.fuel / shipStatic.maxFuel) * 100}%`;
-        this.cache.captainInfo.innerHTML = `
-            <span>${player.playerTitle} ${player.name}, ${player.playerAge}</span>
-            <span class="graph-icon" data-action="show-finance-graph">📈</span>`;
-        this.renderFinancePanel(gameState);
-    }
-    
-    calculateWeeklyInterest(player) {
-        if (!player || player.debt <= 0) return 0;
-        if (player.weeklyInterestAmount > 0) return player.weeklyInterestAmount;
-        return Math.ceil(player.debt * 0.01);
-    }
-
-    renderFinancePanel(gameState) {
-        const { player } = gameState;
-        if (player.debt > 0) {
-            this.cache.financePanel.className = 'panel-border border border-slate-700 bg-black/30 p-4 rounded-lg mb-6 grid grid-cols-3 items-center text-center';
-            this.cache.financePanel.innerHTML = `
-                <div><span class="block text-sm text-cyan-400 uppercase tracking-wider">Credits</span><span class="text-xl font-bold font-roboto-mono text-cyan-300">${formatCredits(player.credits, false)}</span></div>
-                <div><span class="block text-sm text-red-400 uppercase tracking-wider">Debt</span><span class="text-xl font-bold font-roboto-mono text-red-400">${formatCredits(player.debt, false)}</span></div>
-                <div><span class="block text-sm text-red-400 uppercase tracking-wider">Interest / 7d</span><span class="text-xl font-bold font-roboto-mono text-red-400">${formatCredits(this.calculateWeeklyInterest(player), false)}</span></div>`;
-        } else {
-             this.cache.financePanel.className = 'panel-border border border-slate-700 bg-black/30 p-4 rounded-lg mb-6 grid grid-cols-1 items-center text-center';
-             this.cache.financePanel.innerHTML = `<div><span class="block text-sm text-cyan-400 uppercase tracking-wider">Credits</span><span class="text-2xl font-bold font-roboto-mono text-cyan-300">${formatCredits(player.credits, false)}</span></div>`;
-        }
-    }
-
-    renderActiveView(gameState) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
         
-        const activeView = document.getElementById(gameState.currentView);
-        if (activeView) {
-            activeView.classList.add('active-view');
-        }
-
-        if (this.isMobile) {
-            this.cache.inventoryTitle.textContent = "Cargo Manifest";
-        } else {
-            this.cache.inventoryTitle.textContent = "Active Ship Cargo Manifest";
-        }
-
-        this.renderMarketView(gameState);
-        this.renderTravelView(gameState);
-        this.renderStarportView(gameState);
+        this.renderNavigation(gameState);
+        this.renderActiveScreen(gameState);
+        this.renderStickyBar(gameState);
     }
 
-    renderMarketView(gameState) {
+    renderNavigation(gameState) {
+        const { activeNav, activeScreen, lastActiveScreen } = gameState;
+
+        // Main Nav Bar
+        const navButtons = Object.entries(this.navStructure).map(([navId, navData]) => {
+            const isActive = navId === activeNav;
+            const screenId = lastActiveScreen[navId] || Object.keys(navData.screens)[0];
+            return `
+                <button class="btn btn-header theme-${navId} ${isActive ? 'btn-nav-active' : ''}" 
+                        data-action="${ACTION_IDS.SET_SCREEN}" data-nav-id="${navId}" data-screen-id="${screenId}">
+                    ${navData.label}
+                </button>`;
+        }).join('');
+        this.cache.navBar.innerHTML = `<div class="flex justify-around w-full gap-2 md:gap-4">${navButtons}</div>`;
+
+        // Sub Nav Bar
+        const activeSubNav = this.navStructure[activeNav]?.screens || {};
+        const themeClass = `theme-${activeNav}`;
+        const subNavButtons = Object.entries(activeSubNav).map(([screenId, screenLabel]) => {
+            const isActive = screenId === activeScreen;
+            return `
+                <button class="btn btn-sub-nav ${isActive ? 'btn-sub-nav-active' : ''}"
+                        data-action="${ACTION_IDS.SET_SCREEN}" data-nav-id="${activeNav}" data-screen-id="${screenId}">
+                    ${screenLabel}
+                </button>`;
+        }).join('');
+        this.cache.subNavBar.innerHTML = `<div class="flex justify-center w-full gap-2 md:gap-4 mt-3 ${themeClass}">${subNavButtons}</div>`;
+    }
+
+    renderActiveScreen(gameState) {
+        // Hide all screens
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+
+        // Show the active one
+        const activeScreenEl = document.getElementById(`${gameState.activeScreen}-screen`);
+        if (activeScreenEl) {
+            activeScreenEl.style.display = 'block';
+        }
+
+        // Call the specific renderer for the active screen
+        switch (gameState.activeScreen) {
+            case SCREEN_IDS.STATUS: this.renderStatusScreen(gameState); break;
+            case SCREEN_IDS.NAVIGATION: this.renderNavigationScreen(gameState); break;
+            case SCREEN_IDS.SERVICES: this.renderServicesScreen(gameState); break;
+            case SCREEN_IDS.MARKET: this.renderMarketScreen(gameState); break;
+            case SCREEN_IDS.CARGO: this.renderCargoScreen(gameState); break;
+            case SCREEN_IDS.HANGAR: this.renderHangarScreen(gameState); break;
+            case SCREEN_IDS.MISSIONS: this.renderMissionsScreen(gameState); break;
+            case SCREEN_IDS.FINANCE: this.renderFinanceScreen(gameState); break;
+            case SCREEN_IDS.INTEL: this.renderIntelScreen(gameState); break;
+        }
+    }
+
+    renderStickyBar(gameState) {
+        const { activeScreen, player } = gameState;
+        this.cache.stickyBar.innerHTML = ''; // Clear it first
+        const shipState = player.shipStates[player.activeShipId];
+        const shipStatic = SHIPS[player.activeShipId];
+
+        switch(activeScreen) {
+            case SCREEN_IDS.NAVIGATION:
+                const fuelPct = (shipState.fuel / shipStatic.maxFuel) * 100;
+                this.cache.stickyBar.innerHTML = `
+                    <div class="ship-hud">
+                        <div class="flex items-center justify-between">
+                             <div class="flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sky-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" /></svg>
+                                <span class="text-gray-400">Fuel:</span>
+                            </div>
+                            <span class="font-bold text-sky-300">${Math.floor(shipState.fuel)}/${shipStatic.maxFuel}</span>
+                        </div>
+                        <div class="mt-1">
+                            <div class="hud-stat-bar"><div style="width: ${fuelPct}%" class="bg-sky-400"></div></div>
+                        </div>
+                    </div>
+                `;
+                break;
+            case SCREEN_IDS.MARKET:
+            case SCREEN_IDS.CARGO:
+                const cargoUsed = calculateInventoryUsed(player.inventories[player.activeShipId]);
+                this.cache.stickyBar.innerHTML = `
+                     <div class="ship-hud text-center">
+                        <div class="flex justify-around items-center font-roboto-mono">
+                            <span>${formatCredits(player.credits)}</span>
+                            <span class="text-gray-500">|</span>
+                            <span>Cargo: ${cargoUsed}/${shipStatic.cargoCapacity}</span>
+                        </div>
+                     </div>
+                `;
+                break;
+        }
+    }
+    
+    // --- Screen Renderers ---
+
+    renderStatusScreen(gameState) {
+        const { player, day } = gameState;
+        const shipStatic = SHIPS[player.activeShipId];
+        const shipState = player.shipStates[player.activeShipId];
+        const inventory = player.inventories[player.activeShipId];
+        const cargoUsed = calculateInventoryUsed(inventory);
+
+        this.cache.statusScreen.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black/30 p-4 rounded-lg mb-6 items-start">
+                <div class="md:col-span-2 h-full p-4 rounded-lg flex items-center justify-between transition-all duration-500 panel-border border border-slate-700">
+                    <div class="text-left pl-4">
+                        <span class="block text-lg text-gray-400 uppercase tracking-widest">Day</span>
+                        <span class="text-4xl font-bold font-orbitron">${day}</span>
+                    </div>
+                    <div class="text-right flex flex-col items-end">
+                        <p class="text-xs text-cyan-200/80 mb-2 font-roboto-mono text-right">${getDateFromDay(day)}</p>
+                        <div class="mt-2 pt-2 border-t border-slate-500/50">
+                            <div class="text-right">
+                                <p class="text-gray-400 text-sm tracking-wider">Vessel</p>
+                                <p>${shipStatic.name}</p>
+                                <p>Class: ${shipStatic.class}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-1 flex flex-col gap-4">
+                    <div class="ship-hud">
+                        <h4 class="font-orbitron text-xl text-center mb-3 text-cyan-300">Ship Status</h4>
+                        <div class="flex flex-col gap-y-2 text-sm">
+                            <div class="tooltip-container" data-tooltip="Ship integrity. Damaged by travel.">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                        <span class="text-gray-400">Hull:</span>
+                                    </div>
+                                    <span class="font-bold text-green-300">${Math.floor(shipState.health)}%</span>
+                                </div>
+                            </div>
+                             <div class="tooltip-container" data-tooltip="Propulsion system fuel levels.">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sky-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path></svg>
+                                        <span class="text-gray-400">Fuel:</span>
+                                    </div>
+                                    <span class="font-bold text-sky-300">${Math.floor(shipState.fuel)}/${shipStatic.maxFuel}</span>
+                                </div>
+                            </div>
+                            <div class="tooltip-container" data-tooltip="Active ship's current/max cargo space.">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 8a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 000 2h6a1 1 0 100-2H6z" /><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2-2H4a2 2 0 01-2-2V5zm2-1a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1V5a1 1 0 00-1-1H4z" clip-rule="evenodd" /></svg>
+                                        <span class="text-gray-400">Cargo:</span>
+                                    </div>
+                                    <span class="font-bold text-amber-300">${cargoUsed}/${shipStatic.cargoCapacity}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center text-lg text-cyan-200 font-orbitron flex items-center justify-center gap-2">
+                        <span>${player.playerTitle} ${player.name}, ${player.playerAge}</span>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    renderNavigationScreen(gameState) {
+        const { player, currentLocationId, TRAVEL_DATA } = gameState;
+        const location = MARKETS.find(m => m.id === currentLocationId);
+        this.cache.navigationScreen.innerHTML = `
+            <div class="text-center mb-4">
+                 <h3 class="text-3xl font-orbitron">${location.name}</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            ${MARKETS
+                .filter(loc => player.unlockedLocationIds.includes(loc.id))
+                .map(location => {
+                    const isCurrent = location.id === currentLocationId;
+                    const travelInfo = isCurrent ? null : TRAVEL_DATA[currentLocationId][location.id];
+                    return `<div class="location-card p-6 rounded-lg text-center flex flex-col ${isCurrent ? 'highlight-current' : ''} ${location.color} ${location.bg}" data-action="${ACTION_IDS.TRAVEL}" data-location-id="${location.id}">
+                        <h3 class="text-2xl font-orbitron flex-grow">${location.name}</h3>
+                        <div class="location-card-footer mt-auto pt-3 border-t border-cyan-100/10">
+                        ${isCurrent 
+                            ? '<p class="text-yellow-300 font-bold mt-2">(Currently Docked)</p>' 
+                            : `<div class="flex justify-around items-center text-center">
+                                   <div class="flex items-center space-x-2">
+                                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V5z" clip-rule="evenodd" /></svg>
+                                       <div><span class="font-bold font-roboto-mono text-lg">${travelInfo.time}</span><span class="block text-xs text-gray-400">Days</span></div>
+                                   </div>
+                                   <div class="flex items-center space-x-2">
+                                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" /></svg>
+                                       <div><span class="font-bold font-roboto-mono text-lg">${travelInfo.fuelCost}</span><span class="block text-xs text-gray-400">Fuel</span></div>
+                                   </div>
+                               </div>`
+                        }
+                        </div>
+                    </div>`;
+                }).join('')
+            }
+            </div>`;
+    }
+
+    renderServicesScreen(gameState) {
+        const { player, currentLocationId } = gameState;
+        const shipStatic = SHIPS[player.activeShipId];
+        const shipState = player.shipStates[player.activeShipId];
+        const currentMarket = MARKETS.find(m => m.id === currentLocationId);
+
+        let fuelPrice = currentMarket.fuelPrice / 4;
+        if (player.activePerks[PERK_IDS.VENETIAN_SYNDICATE] && currentLocationId === LOCATION_IDS.VENUS) {
+            fuelPrice *= (1 - PERKS[PERK_IDS.VENETIAN_SYNDICATE].fuelDiscount);
+        }
+        
+        let costPerRepairTick = (shipStatic.maxHealth * (GAME_RULES.REPAIR_AMOUNT_PER_TICK / 100)) * GAME_RULES.REPAIR_COST_PER_HP;
+        if (player.activePerks[PERK_IDS.VENETIAN_SYNDICATE] && currentLocationId === LOCATION_IDS.VENUS) {
+            costPerRepairTick *= (1 - PERKS[PERK_IDS.VENETIAN_SYNDICATE].repairDiscount);
+        }
+
+        const fuelPct = (shipState.fuel / shipStatic.maxFuel) * 100;
+        const healthPct = (shipState.health / shipStatic.maxHealth) * 100;
+        
+        this.cache.servicesScreen.innerHTML = `
+             <div class="text-center mb-4">
+                <h3 class="text-2xl font-orbitron">Station Services at ${currentMarket.name}</h3>
+                <div class="text-lg text-cyan-300 mt-2"><span class="text-cyan-400">⌬ </span><span class="font-bold text-cyan-300 ml-auto">${formatCredits(player.credits, false)}</span></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <div class="bg-black/20 p-4 rounded-lg text-center shadow-lg panel-border border border-slate-700">
+                    <h4 class="font-orbitron text-xl mb-2">Refueling</h4>
+                    <p class="mb-3">Price: <span class="font-bold text-cyan-300">${formatCredits(fuelPrice, false)}</span> / 2.5 units</p>
+                    <button id="refuel-btn" class="btn btn-green w-full py-3" ${shipState.fuel >= shipStatic.maxFuel ? 'disabled' : ''}>Hold to Refuel</button>
+                    <div class="w-full hud-stat-bar mt-2"><div style="width: ${fuelPct}%" class="bg-sky-400"></div></div>
+                </div>
+                <div class="bg-black/20 p-4 rounded-lg text-center shadow-lg panel-border border border-slate-700">
+                    <h4 class="font-orbitron text-xl mb-2">Ship Maintenance</h4>
+                    <p class="mb-3">Price: <span class="font-bold text-cyan-300">${formatCredits(costPerRepairTick, false)}</span> / 10% repair</p>
+                    <button id="repair-btn" class="btn btn-blue w-full py-3" ${shipState.health >= shipStatic.maxHealth ? 'disabled' : ''}>Hold to Repair</button>
+                    <div class="w-full hud-stat-bar mt-2"><div style="width: ${healthPct}%" class="bg-green-400"></div></div>
+                </div>
+            </div>`;
+    }
+
+    renderMarketScreen(gameState) {
         const availableCommodities = COMMODITIES.filter(c => c.unlockLevel <= gameState.player.unlockedCommodityLevel);
         const marketHtml = availableCommodities.map(good => {
             return this.isMobile ? this._getMarketItemHtmlMobile(good, gameState) : this._getMarketItemHtmlDesktop(good, gameState);
         }).join('');
-        this.cache.marketPrices.innerHTML = marketHtml;
-        this.renderInventoryList(gameState);
-        this.renderStationServices(gameState);
-        this.renderIntel(gameState);
+        this.cache.marketScreen.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${marketHtml}</div>`;
     }
-    
+
+    renderCargoScreen(gameState) {
+        const inventory = gameState.player.inventories[gameState.player.activeShipId];
+        const ownedGoods = Object.entries(inventory).filter(([, item]) => item.quantity > 0);
+        
+        let content;
+        if (ownedGoods.length > 0) {
+            content = `<div class="flex justify-center flex-wrap gap-4">
+                ${ownedGoods.map(([goodId, item]) => {
+                    const good = COMMODITIES.find(c => c.id === goodId);
+                    const tooltipText = `${good.lore}\n\nAvg. Cost: ${formatCredits(item.avgCost, false)}`;
+                    return `<div class="p-2 rounded-lg border-2 ${good.styleClass} cargo-item-tooltip" style="filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.4));" data-tooltip="${tooltipText}"><div class="font-semibold text-sm commodity-name text-outline">${good.name}</div><div class="text-lg text-center text-cyan-300 text-outline">(${item.quantity})</div></div>`;
+                }).join('')}
+            </div>`;
+        } else {
+            content = '<p class="text-center text-gray-500 text-lg">Your cargo hold is empty.</p>';
+        }
+
+        this.cache.cargoScreen.innerHTML = `
+            <div class="mt-8 pt-6">
+                <h3 class="text-2xl font-orbitron text-center mb-4">Active Ship Cargo Manifest</h3>
+                ${content}
+            </div>`;
+    }
+
+    renderHangarScreen(gameState) {
+        const { player, currentLocationId } = gameState;
+        
+        // Shipyard Content
+        const commonShips = Object.entries(SHIPS).filter(([id, ship]) => !ship.isRare && ship.saleLocationId === currentLocationId && !player.ownedShipIds.includes(id));
+        const rareShips = Object.entries(SHIPS).filter(([id, ship]) => ship.isRare && ship.saleLocationId === currentLocationId && !player.ownedShipIds.includes(id));
+        const shipsForSale = [...commonShips];
+        rareShips.forEach(shipEntry => { if (Math.random() < GAME_RULES.RARE_SHIP_CHANCE) shipsForSale.push(shipEntry); });
+
+        let shipyardHtml;
+        if (shipsForSale.length > 0) {
+            shipyardHtml = shipsForSale.map(([id, ship]) => {
+                const canAfford = player.credits >= ship.price;
+                return `<div class="ship-card p-4 flex flex-col space-y-3"><div class="flex justify-between items-start"><div><h3 class="text-xl font-orbitron text-cyan-300">${ship.name}</h3><p class="text-sm text-gray-400">Class ${ship.class}</p></div><div class="text-right"><p class="text-lg font-bold text-cyan-300">${formatCredits(ship.price)}</p></div></div><p class="text-sm text-gray-400 flex-grow">${ship.lore}</p><div class="grid grid-cols-3 gap-x-4 text-sm font-roboto-mono text-center pt-2"><div><span class="text-gray-500">Hull:</span> <span class="text-green-400">${ship.maxHealth}</span></div><div><span class="text-gray-500">Fuel:</span> <span class="text-sky-400">${ship.maxFuel}</span></div><div><span class="text-gray-500">Cargo:</span> <span class="text-amber-400">${ship.cargoCapacity}</span></div></div><button class="btn w-full mt-2" data-action="${ACTION_IDS.BUY_SHIP}" data-ship-id="${id}" ${!canAfford ? 'disabled' : ''}>Purchase</button></div>`;
+            }).join('');
+        } else {
+            shipyardHtml = '<p class="text-center text-gray-500">No new ships available at this location.</p>';
+        }
+
+        // Hangar Content
+        const hangarHtml = player.ownedShipIds.map(id => {
+            const shipStatic = SHIPS[id];
+            const shipDynamic = player.shipStates[id];
+            const shipInventory = player.inventories[id];
+            const cargoUsed = calculateInventoryUsed(shipInventory);
+            const isActive = id === player.activeShipId;
+            const canSell = player.ownedShipIds.length > 1 && !isActive;
+            const salePrice = Math.floor(shipStatic.price * GAME_RULES.SHIP_SELL_MODIFIER);
+            return `<div class="ship-card p-4 flex flex-col space-y-3 ${isActive ? 'border-yellow-400' : ''}"><h3 class="text-xl font-orbitron ${isActive ? 'text-yellow-300' : 'text-cyan-300'} hanger-ship-name" data-tooltip="${shipStatic.lore}">${shipStatic.name}</h3><p class="text-sm text-gray-400 flex-grow">Class ${shipStatic.class}</p><div class="grid grid-cols-3 gap-x-4 text-sm font-roboto-mono text-center pt-2"><div><span class="text-gray-500">Hull:</span> <span class="text-green-400">${Math.floor(shipDynamic.health)}/${shipStatic.maxHealth}</span></div><div><span class="text-gray-500">Fuel:</span> <span class="text-sky-400">${Math.floor(shipDynamic.fuel)}/${shipStatic.maxFuel}</span></div><div><span class="text-gray-500">Cargo:</span> <span class="text-amber-400">${cargoUsed}/${shipStatic.cargoCapacity}</span></div></div><div class="grid grid-cols-2 gap-2 mt-2">${isActive ? '<button class="btn" disabled>ACTIVE</button>' : `<button class="btn" data-action="${ACTION_IDS.SELECT_SHIP}" data-ship-id="${id}">Select</button>`}<button class="btn" data-action="${ACTION_IDS.SELL_SHIP}" data-ship-id="${id}" ${!canSell ? 'disabled' : ''}>Sell (${formatCredits(salePrice, false)})</button></div></div>`;
+        }).join('');
+
+        // Final Assembly
+        this.cache.hangarScreen.innerHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 relative">
+                <div id="starport-shipyard-panel">
+                    <h2 class="text-3xl font-orbitron text-cyan-300 mb-4 text-center">Shipyard</h2>
+                    <div class="starport-panel space-y-4">${shipyardHtml}</div>
+                </div>
+                <div class="w-full my-4 border-t-2 border-slate-600 lg:hidden"></div>
+                <div class="absolute left-1/2 top-0 h-full w-px bg-slate-600 hidden lg:block"></div>
+                <div id="starport-hangar-panel">
+                    <h2 class="text-3xl font-orbitron text-cyan-300 mb-4 text-center">Hangar</h2>
+                    <div class="starport-panel space-y-4">${hangarHtml}</div>
+                </div>
+            </div>`;
+    }
+
+    renderMissionsScreen(gameState) {
+        this.cache.missionsScreen.innerHTML = `
+            <div class="text-center p-8">
+                <h2 class="text-3xl font-orbitron text-cyan-300 mb-4">Missions</h2>
+                <p class="text-lg text-gray-500">Feature coming soon.</p>
+            </div>
+        `;
+    }
+
+    renderFinanceScreen(gameState) {
+        const { player, day } = gameState;
+
+        // Loan Interface
+        let loanHtml;
+        if (player.debt > 0) {
+            let garnishmentTimerHtml = '';
+            if (player.loanStartDate) {
+                const daysRemaining = GAME_RULES.LOAN_GARNISHMENT_DAYS - (day - player.loanStartDate);
+                if (daysRemaining > 0) {
+                    garnishmentTimerHtml = `<p class="text-xs text-red-400/70 mt-2">Garnishment in ${daysRemaining} days</p>`;
+                }
+            }
+            loanHtml = `
+               <h4 class="font-orbitron text-xl mb-2">Debt</h4>
+               <p class="text-2xl font-bold font-roboto-mono text-red-400 mb-2">${formatCredits(player.debt, false)}</p>
+               <button data-action="${ACTION_IDS.PAY_DEBT}" class="btn w-full py-3 bg-red-800/80 hover:bg-red-700/80 border-red-500" ${player.credits >= player.debt ? '' : 'disabled'}>
+                   Pay Off Full Amount
+               </button>
+               ${garnishmentTimerHtml}`;
+        } else {
+            const dynamicLoanAmount = Math.floor(player.credits * 3.5);
+            const dynamicLoanFee = Math.floor(dynamicLoanAmount * 0.1);
+            const dynamicLoanInterest = Math.floor(dynamicLoanAmount * 0.01);
+            const dynamicLoanData = { amount: dynamicLoanAmount, fee: dynamicLoanFee, interest: dynamicLoanInterest };
+            const loanButtonsHtml = [
+                { key: '10000', amount: 10000, fee: 600, interest: 125 },
+                { key: 'dynamic', ...dynamicLoanData }
+            ].map((loan) => {
+                const tooltipText = `Fee: ${formatCredits(loan.fee, false)}\nInterest: ${formatCredits(loan.interest, false)} / 7d`;
+                return `<button class="btn btn-loan w-full p-2 mt-2 loan-btn-tooltip" data-action="${ACTION_IDS.TAKE_LOAN}" data-loan-details='${JSON.stringify(loan)}' ${player.credits < loan.fee ? 'disabled' : ''} data-tooltip="${tooltipText}">
+                            <span class="font-orbitron text-cyan-300">⌬ ${formatCredits(loan.amount, false)}</span>
+                        </button>`;
+            }).join('');
+            loanHtml = `<h4 class="font-orbitron text-xl mb-2">Financing</h4><div class="flex justify-center gap-4 w-full">${loanButtonsHtml}</div>`;
+        }
+
+        // Transaction Log
+        const logEntries = [...player.financeLog].reverse().map(entry => {
+            const amountColor = entry.amount > 0 ? 'text-green-400' : 'text-red-400';
+            const sign = entry.amount > 0 ? '+' : '';
+            return `
+                <div class="grid grid-cols-4 gap-2 p-2 border-b border-slate-700 text-sm">
+                    <span class="text-gray-400">${entry.day}</span>
+                    <span class="col-span-2">${entry.description}</span>
+                    <span class="${amountColor} text-right">${sign}${formatCredits(entry.amount, false)}</span>
+                </div>
+            `;
+        }).join('');
+
+        this.cache.financeScreen.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1 bg-black/20 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 shadow-lg panel-border border border-slate-700 text-center">
+                    ${loanHtml}
+                </div>
+                <div class="md:col-span-2">
+                     <h3 class="text-2xl font-orbitron text-center mb-4">Transaction Log</h3>
+                     <div class="bg-black/20 p-4 rounded-lg shadow-lg panel-border border border-slate-700 h-96 overflow-y-auto">
+                        <div class="grid grid-cols-4 gap-2 p-2 border-b-2 border-slate-500 font-bold text-gray-300">
+                           <span>Day</span>
+                           <span class="col-span-2">Description</span>
+                           <span class="text-right">Amount</span>
+                        </div>
+                        ${logEntries || '<p class="text-center text-gray-500 p-4">No transactions recorded.</p>'}
+                     </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderIntelScreen(gameState) {
+        this.cache.intelScreen.innerHTML = `
+            <div class="text-center p-8 flex flex-col items-center gap-4">
+                 <div id="tutorial-button-container" class="tutorial-container relative">
+                    <button class="btn btn-header">Tutorial Log</button>
+                    <div id="tutorial-log-modal" class="tutorial-tooltip">
+                        <h3 id="tutorial-log-title" class="text-2xl font-orbitron mb-4 text-center">Tutorial Log</h3>
+                        <ul id="tutorial-log-list" class="space-y-2"></ul>
+                    </div>
+                </div>
+                 <div id="lore-button-container" class="lore-container relative">
+                    <button class="btn btn-header">Story So Far...</button>
+                    <div class="lore-tooltip">
+                        <p>The year 2140 is the result of a single, massive corporate takeover. A century ago, the "Ad Astra Initiative" released advanced technology to all of humanity, a gift from the new Human-AI Alliance on Earth designed to kickstart our expansion into the stars. It was a promise of a new beginning, an open-source key to the solar system, ensuring the survival of all Earth life, both organic and synthetic.</p><br><p>But a gift to everyone is a business opportunity for the few. The hyper-corporations, already positioned in space, immediately patented the most efficient manufacturing processes and proprietary components for this new technology. This maneuver ensured that while anyone could build a Folded-Space Drive, only the corporations could supply the high-performance parts needed to make it truly effective, creating a system-wide technological dependency that persists to this day. This technological monopoly created the "Drive-Divide," the central pillar of the new class system. Nearly all ships run on older, less efficient hardware. Very few ships employ these coveted Folded-Space Drives.</p><br><p>The major hubs beyond Earth are sovereign, corporate-run territories where law is policy and your rights are listed in an employment contract. These scattered colonies are fierce rivals, engaged in constant economic warfare, all propped up by the interstellar supply lines maintained by the Merchant's Guild. For them, you are just another cog in the great machine of commerce.</p><br><p>In a system owned by corporations, possessing your own ship is the only true form of freedom. Every credit earned, every successful trade, is a bet on your own skill and a step toward true sovereignty on the razor's edge of a cargo manifest.</p>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+
+    // --- Helper functions for Market Screen ---
+
     _getMarketItemHtmlDesktop(good, gameState) {
         const { player, market, currentLocationId } = gameState;
         const playerItem = player.inventories[player.activeShipId][good.id];
@@ -205,7 +509,7 @@ export class UIManager {
         const buyDisabled = isSpecialDemand ? 'disabled' : '';
         const nameTooltip = isSpecialDemand ? `data-tooltip="${currentLocation.specialDemand[good.id].lore}"` : `data-tooltip="${good.lore}"`;
         const playerInvDisplay = playerItem && playerItem.quantity > 0 ? ` <span class='text-cyan-300'>(${playerItem.quantity})</span>` : '';
-        const graphIcon = `<span class="graph-icon" data-action="show-price-graph" data-good-id="${good.id}">📈</span>`;
+        const graphIcon = `<span class="graph-icon" data-action="${ACTION_IDS.SHOW_PRICE_GRAPH}" data-good-id="${good.id}">📈</span>`;
         const { marketIndicatorHtml, plIndicatorHtml } = this._getIndicatorHtml(price, sellPrice, galacticAvg, playerItem, false);
         return `
         <div class="item-card-container">
@@ -222,17 +526,17 @@ export class UIManager {
                 </div>
                 <div class="flex items-center space-x-2">
                     <div class="flex flex-col items-center"><div class="flex flex-col space-y-1">
-                        <button class="btn item-btn" data-action="buy" data-good-id="${good.id}" ${buyDisabled}>Buy</button>
-                        <button class="btn btn-sm item-btn" data-action="set-max-buy" data-good-id="${good.id}" ${buyDisabled}>Max</button>
+                        <button class="btn item-btn" data-action="${ACTION_IDS.BUY_ITEM}" data-good-id="${good.id}" ${buyDisabled}>Buy</button>
+                        <button class="btn btn-sm item-btn" data-action="${ACTION_IDS.SET_MAX_BUY}" data-good-id="${good.id}" ${buyDisabled}>Max</button>
                     </div></div>
                     <div class="flex flex-col items-center">
-                        <button class="qty-btn" data-action="increment" data-good-id="${good.id}">+</button>
+                        <button class="qty-btn" data-action="${ACTION_IDS.INCREMENT}" data-good-id="${good.id}">+</button>
                         <input type="number" class="qty-input p-2 my-1" id="qty-${good.id}" data-good-id="${good.id}" value="1" min="1">
-                        <button class="qty-btn" data-action="decrement" data-good-id="${good.id}">-</button>
+                        <button class="qty-btn" data-action="${ACTION_IDS.DECREMENT}" data-good-id="${good.id}">-</button>
                     </div>
                     <div class="flex flex-col items-center"><div class="flex flex-col space-y-1">
-                        <button class="btn item-btn" data-action="sell" data-good-id="${good.id}">Sell</button>
-                        <button class="btn btn-sm item-btn" data-action="set-max-sell" data-good-id="${good.id}">Max</button>
+                        <button class="btn item-btn" data-action="${ACTION_IDS.SELL_ITEM}" data-good-id="${good.id}">Sell</button>
+                        <button class="btn btn-sm item-btn" data-action="${ACTION_IDS.SET_MAX_SELL}" data-good-id="${good.id}">Max</button>
                     </div></div>
                 </div>
             </div>
@@ -251,7 +555,7 @@ export class UIManager {
         const buyDisabled = isSpecialDemand ? 'disabled' : '';
         const nameTooltip = isSpecialDemand ? `data-tooltip="${currentLocation.specialDemand[good.id].lore}"` : `data-tooltip="${good.lore}"`;
         const playerInvDisplay = playerItem && playerItem.quantity > 0 ? ` <span class='text-cyan-300'>(${playerItem.quantity})</span>` : '';
-        const graphIcon = `<span class="graph-icon" data-action="show-price-graph" data-good-id="${good.id}">📈</span>`;
+        const graphIcon = `<span class="graph-icon" data-action="${ACTION_IDS.SHOW_PRICE_GRAPH}" data-good-id="${good.id}">📈</span>`;
         const { marketIndicatorHtml } = this._getIndicatorHtml(price, sellPrice, galacticAvg, playerItem, true);
         return `
         <div class="item-card-container">
@@ -267,17 +571,17 @@ export class UIManager {
                 <div class="flex justify-end items-end mt-2">
                     <div class="mobile-controls-wrapper">
                         <div class="flex flex-col items-center space-y-1">
-                            <button class="btn item-btn" data-action="buy" data-good-id="${good.id}" ${buyDisabled}>Buy</button>
-                            <button class="btn btn-sm item-btn" data-action="set-max-buy" data-good-id="${good.id}" ${buyDisabled}>Max</button>
+                            <button class="btn item-btn" data-action="${ACTION_IDS.BUY_ITEM}" data-good-id="${good.id}" ${buyDisabled}>Buy</button>
+                            <button class="btn btn-sm item-btn" data-action="${ACTION_IDS.SET_MAX_BUY}" data-good-id="${good.id}" ${buyDisabled}>Max</button>
                         </div>
                         <div class="flex flex-col items-center space-y-1">
-                            <button class="qty-btn" data-action="increment" data-good-id="${good.id}">+</button>
+                            <button class="qty-btn" data-action="${ACTION_IDS.INCREMENT}" data-good-id="${good.id}">+</button>
                             <input type="number" class="qty-input" id="qty-${good.id}-mobile" data-good-id="${good.id}" value="1" min="1">
-                            <button class="qty-btn" data-action="decrement" data-good-id="${good.id}">-</button>
+                            <button class="qty-btn" data-action="${ACTION_IDS.DECREMENT}" data-good-id="${good.id}">-</button>
                         </div>
                         <div class="flex flex-col items-center space-y-1">
-                            <button class="btn item-btn" data-action="sell" data-good-id="${good.id}">Sell</button>
-                            <button class="btn btn-sm item-btn" data-action="set-max-sell" data-good-id="${good.id}">Max</button>
+                            <button class="btn item-btn" data-action="${ACTION_IDS.SELL_ITEM}" data-good-id="${good.id}">Sell</button>
+                            <button class="btn btn-sm item-btn" data-action="${ACTION_IDS.SET_MAX_SELL}" data-good-id="${good.id}">Max</button>
                         </div>
                     </div>
                 </div>
@@ -349,161 +653,8 @@ export class UIManager {
         }
         return Math.max(1, Math.round(price));
     }
-    
-    renderInventoryList(gameState) {
-        const inventory = gameState.player.inventories[gameState.player.activeShipId];
-        const ownedGoods = Object.entries(inventory).filter(([, item]) => item.quantity > 0);
-        this.cache.playerInventory.classList.toggle('hidden', ownedGoods.length === 0);
-        if (ownedGoods.length > 0) {
-            this.cache.inventoryList.innerHTML = ownedGoods.map(([goodId, item]) => {
-                const good = COMMODITIES.find(c => c.id === goodId);
-                const tooltipText = `${good.lore}\n\nAvg. Cost: ${formatCredits(item.avgCost, false)}`;
-                return `<div class="p-2 rounded-lg border-2 ${good.styleClass} cargo-item-tooltip" style="filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.4));" data-tooltip="${tooltipText}"><div class="font-semibold text-sm commodity-name text-outline">${good.name}</div><div class="text-lg text-center text-cyan-300 text-outline">(${item.quantity})</div></div>`;
-            }).join('');
-        }
-    }
 
-    renderStationServices(gameState) {
-        const { player, currentLocationId, day } = gameState;
-        this.cache.servicesCreditMirror.innerHTML = `<span class="text-cyan-400">⌬ </span><span class="font-bold text-cyan-300 ml-auto">${formatCredits(player.credits, false)}</span>`;
-        this.cache.debtContainer.innerHTML = '';
-        if (player.debt > 0) {
-            let garnishmentTimerHtml = '';
-            if (player.loanStartDate) {
-                const daysRemaining = CONFIG.LOAN_GARNISHMENT_DAYS - (day - player.loanStartDate);
-                if (daysRemaining > 0) {
-                    garnishmentTimerHtml = `<p class="text-xs text-red-400/70 mt-2">Garnishment in ${daysRemaining} days</p>`;
-                }
-            }
-            this.cache.debtContainer.innerHTML = `
-               <h4 class="font-orbitron text-xl mb-2">Debt</h4>
-               <button data-action="pay-debt" class="btn w-full py-3 bg-red-800/80 hover:bg-red-700/80 border-red-500" ${player.credits >= player.debt ? '' : 'disabled'}>
-                   Pay Off ${formatCredits(player.debt, false)}
-               </button>
-               ${garnishmentTimerHtml}`;
-        } else {
-            this.cache.debtContainer.innerHTML = `<h4 class="font-orbitron text-xl mb-2">Financing</h4>`;
-            const dynamicLoanAmount = Math.floor(player.credits * 3.5);
-            const dynamicLoanFee = Math.floor(dynamicLoanAmount * 0.1);
-            const dynamicLoanInterest = Math.floor(dynamicLoanAmount * 0.01);
-            const dynamicLoanData = { amount: dynamicLoanAmount, fee: dynamicLoanFee, interest: dynamicLoanInterest };
-            const loanButtonsHtml = [
-                { key: '10000', amount: 10000, fee: 600, interest: 125 },
-                { key: 'dynamic', ...dynamicLoanData }
-            ].map((loan) => {
-                const tooltipText = `Fee: ${formatCredits(loan.fee, false)}\nInterest: ${formatCredits(loan.interest, false)} / 7d`;
-                return `<button class="btn btn-loan w-full p-2 mt-2 loan-btn-tooltip" data-action="take-loan" data-loan-details='${JSON.stringify(loan)}' ${player.credits < loan.fee ? 'disabled' : ''} data-tooltip="${tooltipText}">
-                            <span class="font-orbitron text-cyan-300">⌬ ${formatCredits(loan.amount, false)}</span>
-                        </button>`;
-            }).join('');
-            this.cache.debtContainer.innerHTML += `<div class="flex justify-center gap-4 w-full">${loanButtonsHtml}</div>`;
-        }
-        const currentMarket = MARKETS.find(m => m.id === currentLocationId);
-        const ship = SHIPS[player.activeShipId];
-        let fuelPrice = currentMarket.fuelPrice / 4;
-        if (player.activePerks.venetian_syndicate && currentLocationId === 'loc_venus') {
-            fuelPrice *= (1 - PERKS.venetian_syndicate.fuelDiscount);
-        }
-        this.cache.fuelPrice.textContent = formatCredits(fuelPrice, false);
-        let costPerRepairTick = (ship.maxHealth * (CONFIG.REPAIR_AMOUNT_PER_TICK / 100)) * CONFIG.REPAIR_COST_PER_HP;
-        if (player.activePerks.venetian_syndicate && currentLocationId === 'loc_venus') {
-            costPerRepairTick *= (1 - PERKS.venetian_syndicate.repairDiscount);
-        }
-        this.cache.repairCost.textContent = formatCredits(costPerRepairTick, false);
-    }
-    
-    renderIntel(gameState) {
-        const { intel, player, currentLocationId, day } = gameState;
-        this.cache.intelDisplay.classList.add('hidden');
-        if (intel.active) {
-            const daysLeft = intel.active.endDay - day;
-            if (daysLeft > 0) {
-                const targetMarket = MARKETS.find(m => m.id === intel.active.targetMarketId);
-                const commodity = COMMODITIES.find(c => c.id === intel.active.commodityId);
-                let intelText = (intel.active.type === 'demand') 
-                    ? `A contact reports a <span class="hl-pulse-green">high demand</span> for <span class="font-bold text-yellow-300">${commodity.name}</span> at <span class="font-bold text-cyan-300">${targetMarket.name}</span>! The window is closing: <span class="font-bold">${daysLeft}</span> days left.` 
-                    : `The market for <span class="font-bold text-yellow-300">${commodity.name}</span> at <span class="font-bold text-cyan-300">${targetMarket.name}</span> has crashed. Prices will be depressed for <span class="font-bold">${daysLeft}</span> days.`;
-                this.cache.intelDisplay.className = intel.active.type === 'demand' ? 'p-3 rounded-lg my-4 text-center bg-cyan-900/40 border border-cyan-700' : 'p-3 rounded-lg my-4 text-center bg-red-900/40 border border-red-700';
-                this.cache.intelDisplay.innerHTML = `<p>${intelText}</p>`;
-                this.cache.intelDisplay.classList.remove('hidden');
-            }
-        }
-        
-        this.cache.intelPurchaseContainer.innerHTML = '';
-        const alwaysHasIntel = ['loc_exchange', 'loc_kepler'].includes(currentLocationId);
-        if ((alwaysHasIntel || intel.available[currentLocationId]) && !intel.active && player.credits >= CONFIG.INTEL_MIN_CREDITS) {
-            const intelCost = Math.floor(player.credits * CONFIG.INTEL_COST_PERCENTAGE);
-            this.cache.intelPurchaseContainer.innerHTML = `<button data-action="purchase-intel" class="btn btn-intel" data-cost="${intelCost}">Purchase Intel (${formatCredits(intelCost)})</button>`;
-        }
-    }
-
-    renderTravelView(gameState) {
-        const { player, currentLocationId, TRAVEL_DATA } = gameState;
-        this.cache.locationsGrid.innerHTML = MARKETS
-            .filter(loc => player.unlockedLocationIds.includes(loc.id))
-            .map(location => {
-                const isCurrent = location.id === currentLocationId;
-                const travelInfo = isCurrent ? null : TRAVEL_DATA[currentLocationId][location.id];
-                return `
-                <div class="location-card p-6 rounded-lg text-center flex flex-col ${isCurrent ? 'highlight-current' : ''} ${location.color} ${location.bg}" data-action="travel" data-location-id="${location.id}">
-                    <h3 class="text-2xl font-orbitron">${location.name}</h3>
-                    <p class="text-gray-300 mt-2 flex-grow">${location.description}</p>
-                    <div class="location-card-footer mt-auto pt-3 border-t border-cyan-100/10">
-                    ${isCurrent 
-                        ? '<p class="text-yellow-300 font-bold mt-2">(Currently Docked)</p>' 
-                        : `<div class="flex justify-around items-center text-center"><div class="flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V5z" clip-rule="evenodd" /></svg><div><span class="font-bold font-roboto-mono text-lg">${travelInfo.time}</span><span class="block text-xs text-gray-400">Days</span></div></div><div class="flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" /></svg><div><span class="font-bold font-roboto-mono text-lg">${travelInfo.fuelCost}</span><span class="block text-xs text-gray-400">Fuel</span></div></div></div>`
-                    }
-                    </div>
-                </div>`;
-        }).join('');
-    }
-    
-    renderStarportView(gameState) {
-        const { player, currentLocationId } = gameState;
-        const shipyardEl = document.getElementById('starport-shipyard');
-        const hangarEl = document.getElementById('starport-hangar');
-        shipyardEl.innerHTML = '';
-        hangarEl.innerHTML = '';
-        const commonShips = Object.entries(SHIPS).filter(([id, ship]) => !ship.isRare && ship.saleLocationId === currentLocationId && !player.ownedShipIds.includes(id));
-        const rareShips = Object.entries(SHIPS).filter(([id, ship]) => ship.isRare && ship.saleLocationId === currentLocationId && !player.ownedShipIds.includes(id));
-        const shipsForSale = [...commonShips];
-        rareShips.forEach(shipEntry => {
-            if (Math.random() < CONFIG.RARE_SHIP_CHANCE) shipsForSale.push(shipEntry);
-        });
-        if (shipsForSale.length > 0) {
-            shipsForSale.forEach(([id, ship]) => {
-                const canAfford = player.credits >= ship.price;
-                shipyardEl.innerHTML += `<div class="ship-card p-4 flex flex-col space-y-3"><div class="flex justify-between items-start"><div><h3 class="text-xl font-orbitron text-cyan-300">${ship.name}</h3><p class="text-sm text-gray-400">Class ${ship.class}</p></div><div class="text-right"><p class="text-lg font-bold text-cyan-300">${formatCredits(ship.price)}</p></div></div><p class="text-sm text-gray-400 flex-grow">${ship.lore}</p><div class="grid grid-cols-3 gap-x-4 text-sm font-roboto-mono text-center pt-2"><div><span class="text-gray-500">Hull:</span> <span class="text-green-400">${ship.maxHealth}</span></div><div><span class="text-gray-500">Fuel:</span> <span class="text-sky-400">${ship.maxFuel}</span></div><div><span class="text-gray-500">Cargo:</span> <span class="text-amber-400">${ship.cargoCapacity}</span></div></div><button class="btn w-full mt-2" data-action="buy-ship" data-ship-id="${id}" ${!canAfford ? 'disabled' : ''}>Purchase</button></div>`;
-            });
-        } else {
-            shipyardEl.innerHTML = '<p class="text-center text-gray-500">No new ships available at this location.</p>';
-        }
-        player.ownedShipIds.forEach(id => {
-            const shipStatic = SHIPS[id];
-            const shipDynamic = player.shipStates[id];
-            const shipInventory = player.inventories[id];
-            const cargoUsed = calculateInventoryUsed(shipInventory);
-            const isActive = id === player.activeShipId;
-            const canSell = player.ownedShipIds.length > 1 && !isActive;
-            const salePrice = Math.floor(shipStatic.price * CONFIG.SHIP_SELL_MODIFIER);
-            hangarEl.innerHTML += `<div class="ship-card p-4 flex flex-col space-y-3 ${isActive ? 'border-yellow-400' : ''}"><h3 class="text-xl font-orbitron ${isActive ? 'text-yellow-300' : 'text-cyan-300'} hanger-ship-name" data-tooltip="${shipStatic.lore}">${shipStatic.name}</h3><p class="text-sm text-gray-400 flex-grow">Class ${shipStatic.class}</p><div class="grid grid-cols-3 gap-x-4 text-sm font-roboto-mono text-center pt-2"><div><span class="text-gray-500">Hull:</span> <span class="text-green-400">${Math.floor(shipDynamic.health)}/${shipStatic.maxHealth}</span></div><div><span class="text-gray-500">Fuel:</span> <span class="text-sky-400">${Math.floor(shipDynamic.fuel)}/${shipStatic.maxFuel}</span></div><div><span class="text-gray-500">Cargo:</span> <span class="text-amber-400">${cargoUsed}/${shipStatic.cargoCapacity}</span></div></div><div class="grid grid-cols-2 gap-2 mt-2">${isActive ? '<button class="btn" disabled>ACTIVE</button>' : `<button class="btn" data-action="select-ship" data-ship-id="${id}">Select</button>`}<button class="btn" data-action="sell-ship" data-ship-id="${id}" ${!canSell ? 'disabled' : ''}>Sell (${formatCredits(salePrice, false)})</button></div></div>`;
-        });
-    }
-
-    updateLiveStats(gameState) {
-        if (!gameState || !gameState.player) return;
-        const { player } = gameState;
-        const ship = SHIPS[player.activeShipId];
-        const shipState = player.shipStates[player.activeShipId];
-        this.cache.shipFuel.textContent = `${Math.floor(shipState.fuel)}/${ship.maxFuel}`;
-        this.cache.shipFuelBar.style.width = `${(shipState.fuel / ship.maxFuel) * 100}%`;
-        document.getElementById('refuel-feedback-bar').style.width = `${(shipState.fuel / ship.maxFuel) * 100}%`;
-        this.cache.shipHealth.textContent = `${Math.floor(shipState.health)}%`;
-        document.getElementById('repair-feedback-bar').style.width = `${(shipState.health / ship.maxHealth) * 100}%`;
-        this.cache.repairBtn.disabled = shipState.health >= ship.maxHealth;
-        this.cache.refuelBtn.disabled = shipState.fuel >= ship.maxFuel;
-        this.cache.servicesCreditMirror.innerHTML = `<span class="text-cyan-400">⌬ </span><span class="font-bold text-cyan-300 ml-auto">${formatCredits(player.credits, false)}</span>`;
-    }
+    // --- Utility & Modal Methods (largely unchanged, but grouped here) ---
 
     showTravelAnimation(from, to, travelInfo, totalHullDamagePercent, finalCallback) {
         const modal = document.getElementById('travel-animation-modal');
@@ -748,11 +899,11 @@ export class UIManager {
         const tooltip = this.cache.graphTooltip;
         const action = anchorEl.dataset.action;
 
-        if (action === 'show-price-graph') {
+        if (action === ACTION_IDS.SHOW_PRICE_GRAPH) {
             const goodId = anchorEl.dataset.goodId;
             const playerItem = gameState.player.inventories[gameState.player.activeShipId][goodId];
             tooltip.innerHTML = this._renderPriceGraph(goodId, gameState, playerItem);
-        } else if (action === 'show-finance-graph') {
+        } else if (action === ACTION_IDS.SHOW_FINANCE_GRAPH) {
             tooltip.innerHTML = this._renderFinanceGraph(gameState);
         }
         
@@ -784,7 +935,7 @@ export class UIManager {
                 topPos = rect.bottom + 10;
             }
         } else {
-            if (this.activeGraphAnchor.dataset.action === 'show-finance-graph') {
+            if (this.activeGraphAnchor.dataset.action === ACTION_IDS.SHOW_FINANCE_GRAPH) {
                 leftPos = rect.left - tooltipWidth - 10;
                 topPos = rect.top + (rect.height / 2) - (tooltipHeight / 2);
             } else {
@@ -866,27 +1017,6 @@ export class UIManager {
         return svg;
     }
 
-    _renderFinanceGraph(gameState) {
-        const history = gameState.player.financeHistory;
-        if (!history || history.length < 2) return `<div class="text-gray-400 text-sm p-4">Check back here tomorrow!</div>`;
-        const width = 300, height = 140, padding = { top: 20, right: 25, bottom: 20, left: 10 };
-        const financeData = history.map(p => p.value);
-        const minVal = Math.min(...financeData), maxVal = Math.max(...financeData);
-        const valueRange = maxVal - minVal > 0 ? maxVal - minVal : 1;
-        const graphWidth = width - padding.left - padding.right, graphHeight = height - padding.top - padding.bottom;
-        const getX = i => (i / (history.length - 1)) * graphWidth + padding.left;
-        const getY = v => height - padding.bottom - ((v - minVal) / valueRange) * graphHeight;
-        const financePoints = financeData.map((w, i) => `${getX(i)},${getY(w)}`).join(' ');
-        const typeMap = { trade: { color: '#facc15', label: 'trade' }, fuel: { color: '#60a5fa', label: 'fuel' }, repair: { color: '#34d399', label: 'repair' }, loan: { color: '#f87171', label: 'loan' }, ship: { color: '#c084fc', label: 'ship' }, intel: { color: '#9ca3af', label: 'intel'}, debug: { color: '#f9a8d4', label: 'debug'}, debt: { color: '#ef4444', label: 'debt'}, wager_win: { color: '#a3e635', label: 'wager' }, wager_loss: { color: '#e11d48', label: 'wager' }, start: { color: '#d1d5db', label: '' } };
-        let pointsHtml = '';
-        history.forEach((point, i) => {
-            if (point.type === 'start') return;
-            const x = getX(i), y = getY(point.value), config = typeMap[point.type];
-            pointsHtml += `<g><circle class="graph-point" cx="${x}" cy="${y}" r="4" fill="${config.color}" stroke="#0c101d" stroke-width="2" /><text x="${x}" y="${y - 8}" fill="${config.color}" font-size="9" font-family="Roboto Mono" text-anchor="middle" style="pointer-events: none;">${config.label}</text></g>`;
-        });
-        return `<svg id="finance-graph-svg" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="100%" height="100%" fill="#0c101d" /><polyline fill="none" stroke="#60a5fa" stroke-width="2.5" points="${financePoints}" style="filter: url(#glow);" />${pointsHtml}<text x="${width / 2}" y="${padding.top - 5}" fill="#d0d8e8" font-size="10" font-family="Roboto Mono" text-anchor="middle">Finance</text></svg>`;
-    }
-
     // --- Tutorial System Methods ---
 
     showTutorialToast({ step, onSkip, onNext }) {
@@ -954,8 +1084,14 @@ export class UIManager {
     }
 
     showTutorialLogModal({ seenBatches, onSelect }) {
-        const logModal = this.cache.tutorialLogModal;
-        const list = this.cache.tutorialLogList;
+        const logModal = document.getElementById('tutorial-log-modal');
+        const list = document.getElementById('tutorial-log-list');
+
+        if (!logModal || !list) {
+            console.error('Tutorial log modal elements not found in DOM.');
+            return;
+        }
+
         list.innerHTML = ''; // Clear previous entries
 
         if (seenBatches.length === 0) {

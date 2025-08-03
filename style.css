@@ -54,20 +54,100 @@ body {
 .btn-header {
      padding: 0.75rem 1.5rem;
      font-size: 1.125rem;
+     flex: 1; /* Make main nav buttons take equal space */
+     background-blend-mode: overlay;
+     background-image: linear-gradient(rgba(255,255,255,0.08), rgba(0,0,0,0.1));
 }
 
-.btn-header-active {
-    border-color: #facc15;
-    background-color: #1a253c;
-    transform: translateY(2px);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-    color: #facc15;
+@keyframes glow-border {
+    0% { box-shadow: inset 0 3px 6px rgba(0,0,0,0.7), 0 0 8px var(--glow-color); }
+    50% { box-shadow: inset 0 3px 6px rgba(0,0,0,0.7), 0 0 16px var(--glow-color), 0 0 20px var(--glow-color); }
+    100% { box-shadow: inset 0 3px 6px rgba(0,0,0,0.7), 0 0 8px var(--glow-color); }
 }
-.btn-header-active:hover:not(:disabled) {
-    background-color: #1a253c;
-    transform: translateY(2px);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+
+/* --- Sub-Navigation Button Styles --- */
+.btn-sub-nav {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    flex: 1;
+    background-blend-mode: overlay;
+    border-width: 1px;
+    background-image: linear-gradient(rgba(255,255,255,0.08), rgba(0,0,0,0.1));
+    transition: all 0.2s ease-in-out;
 }
+.btn-sub-nav:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.btn-sub-nav-active {
+    transform: translateY(1px);
+    border-width: 3px !important;
+    animation: glow-border 2.5s infinite;
+}
+.btn-sub-nav-active:hover:not(:disabled) {
+    transform: translateY(1px) !important;
+}
+
+/* --- SHIP (Green Theme) --- */
+.theme-ship { --glow-color: #34d399; }
+.theme-ship .btn-sub-nav, .theme-ship.btn-header {
+    background-color: #144234;
+    border-color: #23785d;
+    color: #a7f3d0;
+}
+.theme-ship .btn-sub-nav:hover:not(:disabled), .theme-ship.btn-header:hover:not(:disabled) {
+    background-color: #1a5643;
+    color: #dcfce7;
+}
+.theme-ship .btn-sub-nav-active, .theme-ship.btn-nav-active {
+    background-color: #1a5643 !important;
+    border-color: #34d399 !important;
+    color: #f0fdf4 !important;
+}
+
+/* --- STARPORT (Blue Theme) --- */
+.theme-starport { --glow-color: #60a5fa; }
+.theme-starport .btn-sub-nav, .theme-starport.btn-header {
+    background-color: #1e3a8a;
+    border-color: #3b82f6;
+    color: #bfdbfe;
+}
+.theme-starport .btn-sub-nav:hover:not(:disabled), .theme-starport.btn-header:hover:not(:disabled) {
+    background-color: #1e40af;
+    color: #dbeafe;
+}
+.theme-starport .btn-sub-nav-active, .theme-starport.btn-nav-active {
+    background-color: #1e40af !important;
+    border-color: #60a5fa !important;
+    color: #eff6ff !important;
+}
+
+/* --- ADMIN (Orange Theme) --- */
+.theme-admin { --glow-color: #fb923c; }
+.theme-admin .btn-sub-nav, .theme-admin.btn-header {
+    background-color: #7c2d12;
+    border-color: #f97316;
+    color: #fed7aa;
+}
+.theme-admin .btn-sub-nav:hover:not(:disabled), .theme-admin.btn-header:hover:not(:disabled) {
+    background-color: #9a3412;
+    color: #ffedd5;
+}
+.theme-admin .btn-sub-nav-active, .theme-admin.btn-nav-active {
+    background-color: #9a3412 !important;
+    border-color: #fb923c !important;
+    color: #fff7ed !important;
+}
+
+.btn-nav-active {
+    border-width: 3px !important;
+    transform: translateY(1px);
+    animation: glow-border 2.5s infinite;
+}
+.btn-nav-active:hover:not(:disabled) {
+    transform: translateY(1px) !important;
+}
+
 #refuel-btn:active:not(:disabled), #repair-btn:active:not(:disabled) {
     transform: scale(0.98);
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
@@ -79,6 +159,13 @@ body {
 }
 .item-btn:hover:not(:disabled) {
      background-color: rgba(28, 40, 66, 0.8);
+}
+
+.screen {
+    display: none;
+}
+.active-screen {
+    display: block;
 }
 
 @keyframes fadeIn {
@@ -319,8 +406,9 @@ body {
 
 .ship-hud {
     background-color: rgba(10, 20, 40, 0.5);
-    border: 1px solid #2a3a5a;
-    padding: 0.75rem;
+    border: 2px solid #2a3a5a;
+    padding: 0.45rem;
+    font-size: 0.8rem;
     border-radius: 10px;
     position: relative;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -336,36 +424,14 @@ body {
     border-width: 0 2px 2px 0; border-bottom-right-radius: 10px; }
 
 .hud-stat-bar { background-color: #1a253c;
-    border-radius: 3px; overflow: hidden; height: 10px; }
+    border-radius: 3px; overflow: hidden; height: 6px; }
 .hud-stat-bar > div { transition: width 0.5s ease-out;
     height: 100%; }
-
-#day-panel-ship-details { font-size: 1.1rem; line-height: 1.6rem; }
 
 .commodity-name { font-family: 'Roboto Mono', monospace; font-size: 1rem; }
 .price-text { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
 .text-outline { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
 
-.market-indicator-container {
-    position: relative;
-    min-height: 1.1rem;
-    width: 90px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-.market-indicator { 
-    font-family: 'Aldrich', sans-serif;
-    font-size: 1rem;
-    line-height: 1.1rem;
-    text-shadow: 0 1px 3px #000, 0 1px 3px #000;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    position: absolute;
-    right: 0;
-    top: 0;
-}
 .market-indicator-stacked {
     display: flex;
     flex-direction: column;
@@ -403,12 +469,6 @@ body {
     r: 6;
 }
 
-#inventory-list { 
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
 .hl { color: #fde047; font-weight: 700; }
 .hl-blue { color: #60a5fa; font-weight: 700; }
 .hl-red { color: #f87171; font-weight: 700; }
@@ -479,15 +539,6 @@ body {
     background-color: #000; animation: dark-shift 5s ease infinite; color: #fde047; }
 .item-style-14 { border-color: #f9a8d4;
     background-color: #fca5a5; animation: warm-shift 4s ease infinite; color: #fff; }
-
-#services-credit-mirror {
-    font-size: 1.5rem; 
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-#services-credit-mirror span {
-    font-size: 1.5rem;
-}
 
 .floating-text {
     position: fixed;
@@ -611,58 +662,6 @@ body {
     display: none;
 }
  
-#travel-view {
-    position: relative; /* Establishes the positioning frame for the travel screen */
-    padding-bottom: 4rem; /* Creates space at the bottom for the new elements */
-}
-/* Positions the "The story so far..." button */
-#lore-button-container {
-    position: absolute;
-    bottom: 0.5rem;
-    left: 1.5rem;
-    z-index: 20;
-
-    /* Visual styles from before */
-    padding: 0.25rem 0.75rem;
-    border: 1px solid #4a6a8a;
-    border-radius: 8px;
-    background-color: #22304a;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    color: #c0d0f0;
-    transition: all 0.3s ease;
-}
-#tutorial-button-container {
-    position: absolute;
-    bottom: 0.5rem;
-    right: 1.5rem;
-    z-index: 20;
-
-    /* Visual styles from before */
-    padding: 0.25rem 0.75rem;
-    border: 1px solid #4a6a8a;
-    border-radius: 8px;
-    background-color: #22304a;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    color: #c0d0f0;
-    transition: all 0.3s ease;
-}
-#lore-button-container:hover, #tutorial-button-container:hover {
-    background-color: #32405a;
-    color: #e0f0ff;
-}
-#event-modal .lore-tooltip {
-    max-height: 43vh;
-}
-#nav-divider {
-    border-color: #3a4a6a;
-    border-top-width: 2px;
-    margin-top: 4rem;
-    margin-bottom: 0.1rem;
-}
 .mobile-indicator-wrapper {
     position: absolute;
     bottom: 0.5rem;
@@ -711,16 +710,10 @@ body {
 .tt-left { top: 50%; left: 2%; transform: translateY(-50%); }
 .tt-right { top: 50%; right: 2%; transform: translateY(-50%); }
 .tt-bottom-center { bottom: 5%; left: 50%; transform: translateX(-50%); }
-/* Add more as needed: .tt-center, .tt-bottom-center etc. */
-
 
 @media (max-width: 768px) {
-    /* --- General Mobile Layout --- */
     body {
         padding-bottom: 15vh;
-    }
-    #game-day {
-        font-size: 4.5rem;
     }
 
     .cargo-item-tooltip[data-tooltip]:hover::after,
@@ -734,18 +727,6 @@ body {
         flex-wrap: wrap;
         justify-content: center;
     }
-    #header-main > div:first-child {
-        text-align: center;
-        flex-basis: 100%;
-    }
-    #header-nav-buttons {
-        flex-direction: row;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 1rem;
-        width: 100%;
-        justify-content: space-around;
-    }
     .btn-header {
         padding: 0.5rem 0.6rem;
         font-size: 0.8rem;
@@ -753,6 +734,21 @@ body {
         min-width: 0;
         width: auto;
     }
+    .btn-sub-nav {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.75rem;
+        flex: 1;
+    }
+
+    /* --- Finance Screen on Mobile --- */
+    #finance-screen .grid-cols-4 {
+        grid-template-columns: 0.5fr 2fr 1fr; /* Day | Desc | Amount */
+        font-size: 0.8rem; /* Smaller font for log */
+    }
+    #finance-screen .grid-cols-4 > span:nth-child(2) {
+        grid-column: span 1; /* Description takes less space */
+    }
+
 
     /* --- Market View Styles --- */
     .commodity-name {
@@ -795,30 +791,6 @@ body {
         text-align: center;
     }
 
-    /* --- Travel View Footer Styles --- */
-    #travel-view {
-        padding-bottom: 2rem;
-    }
-    #nav-divider {
-        margin-top: 2.5rem;
-        margin-bottom: 0.1rem;
-    }
-    #bottom-nav-buttons {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-        margin-top: 1.5rem;
-    }
-    body #bottom-nav-buttons > * {
-        position: static;
-        transform: none;
-        display: block;
-        width: 80%;
-        max-width: 300px;
-        text-align: center;
-    }
-
     /* --- Mobile Tutorial Toast Override --- */
     #tutorial-toast-container {
         top: auto !important;
@@ -830,32 +802,26 @@ body {
         max-width: 100%;
     }
 }
-#feedback-button-container {
-    position: absolute;
-    bottom: 0.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 20;
-    text-decoration: none;
 
-    /* Visual styles from before */
-    padding: 0.25rem 0.75rem;
-    border: 1px solid #4a6a8a;
-    border-radius: 8px;
-    background-color: #22304a;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    color: #c0d0f0;
-    transition: all 0.3s ease;
+#top-bar-container {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 50;
+    
+    max-width: 98%;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 15px;
+    
+    background-color: rgba(12, 16, 29, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    padding: 0.75rem 1rem;
+    
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
 }
-#lore-button-container:hover, #tutorial-button-container:hover, #feedback-button-container:hover {
-    background-color: #32405a;
-    color: #e0f0ff;
-}
-.view {
-    display: none;
-}
-.active-view {
-    display: block;
+
+#sticky-bar {
+    margin-top: 0.75rem;
 }

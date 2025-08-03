@@ -1,5 +1,5 @@
 // js/services/simulation/MarketService.js
-import { CONFIG } from '../../data/config.js';
+import { GAME_RULES } from '../../data/constants.js';
 import { COMMODITIES, MARKETS } from '../../data/gamedata.js';
 import { skewedRandom } from '../../utils.js';
 
@@ -18,8 +18,8 @@ export class MarketService {
                 const mod = location.modifiers[good.id] || 1.0;
                 const baseline = avg * mod;
 
-                const volatility = (Math.random() - 0.5) * 2 * CONFIG.DAILY_PRICE_VOLATILITY;
-                const reversion = (baseline - price) * CONFIG.MEAN_REVERSION_STRENGTH;
+                const volatility = (Math.random() - 0.5) * 2 * GAME_RULES.DAILY_PRICE_VOLATILITY;
+                const reversion = (baseline - price) * GAME_RULES.MEAN_REVERSION_STRENGTH;
                 
                 this.gameState.market.prices[location.id][good.id] = Math.max(1, Math.round(price + price * volatility + reversion));
             });
@@ -75,7 +75,7 @@ export class MarketService {
                 
                 history.push({ day: this.gameState.day, price: currentPrice });
                 
-                while (history.length > CONFIG.PRICE_HISTORY_LENGTH) {
+                while (history.length > GAME_RULES.PRICE_HISTORY_LENGTH) {
                     history.shift();
                 }
             });

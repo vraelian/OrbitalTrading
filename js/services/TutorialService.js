@@ -1,5 +1,6 @@
 // js/services/TutorialService.js
 import { TUTORIAL_DATA } from '../data/gamedata.js';
+import { TUTORIAL_ACTION_TYPES, ACTION_IDS } from '../data/constants.js';
 
 export class TutorialService {
     constructor(gameState, uiManager, simulationService) {
@@ -27,7 +28,7 @@ export class TutorialService {
             const isSkipped = this.gameState.tutorials.skippedTutorialBatches.includes(batchId);
 
             if (!hasBeenSeen && !isSkipped) {
-                const triggerAction = { type: 'VIEW_LOAD', viewId: this.gameState.currentView };
+                const triggerAction = { type: TUTORIAL_ACTION_TYPES.SCREEN_LOAD, screenId: this.gameState.activeScreen };
                 if (this._matchesCondition(batch.trigger, triggerAction)) {
                     this.triggerBatch(batchId);
                     break;
@@ -40,10 +41,12 @@ export class TutorialService {
         if (!TUTORIAL_DATA[batchId]) return;
 
         const batch = TUTORIAL_DATA[batchId];
-        // If the tutorial is triggered by a view load, switch to that view
-        if (batch.trigger.type === 'VIEW_LOAD') {
-            if (this.gameState.currentView !== batch.trigger.viewId) {
-                this.simulationService.setView(batch.trigger.viewId);
+        // If the tutorial is triggered by a screen load, switch to that screen
+        if (batch.trigger.type === TUTORIAL_ACTION_TYPES.SCREEN_LOAD) {
+            if (this.gameState.activeScreen !== batch.trigger.screenId) {
+                // This assumes we can derive the navId. For now, this won't happen.
+                // A more robust system would store the navId with the screenId.
+                // For now, we rely on the user navigating there to trigger it.
             }
         }
 
@@ -91,7 +94,7 @@ export class TutorialService {
             return;
         }
         
-        if (step.completion.action === 'buy-item' && this.gameState.player.credits < 1000) {
+        if (step.completion.action === ACTION_IDS.BUY_ITEM && this.gameState.player.credits < 1000) {
             return;
         }
 
@@ -124,11 +127,11 @@ export class TutorialService {
     _matchesSingleCondition(condition, actionData) {
         if (condition.type !== actionData.type) return false;
         switch (condition.type) {
-            case 'VIEW_LOAD':
-                return condition.viewId === actionData.viewId;
-            case 'ACTION':
+            case TUTORIAL_ACTION_TYPES.SCREEN_LOAD:
+                return condition.screenId === actionData.screenId;
+            case TUTORIAL_ACTION_TYPES.ACTION:
                 return condition.action === actionData.action;
-            case 'INFO': // Always true when checked, relies on manual "Next" click
+            case TUTORIAL_ACTION_TYPES.INFO: // Always true when checked, relies on manual "Next" click
                 return true;
             default:
                 return false;

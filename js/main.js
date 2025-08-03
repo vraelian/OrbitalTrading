@@ -63,14 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasSave = gameState.loadGame();
         if (!hasSave) {
             gameState.startNewGame(playerName);
-
-            // --- Pre-render all views during initial load ---
-            console.log("Pre-rendering all views...");
-            uiManager.renderMarketView(gameState.getState());
-            uiManager.renderTravelView(gameState.getState());
-            uiManager.renderStarportView(gameState.getState());
-
-            document.getElementById('travel-view').classList.add('active-view');
             simulationService.showIntroSequence();
         }
 
@@ -80,6 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Initial render
         uiManager.render(gameState.getState());
-        tutorialService.checkState({ type: 'VIEW_LOAD', viewId: gameState.currentView });
+        tutorialService.checkState({ type: 'SCREEN_LOAD', screenId: gameState.activeScreen });
     }
 });
