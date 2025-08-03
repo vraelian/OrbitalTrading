@@ -443,7 +443,7 @@ export class SimulationService {
 
     _applyEventEffects(outcome) {
         outcome.effects.forEach(effect => {
-            applyEffect(this.gameState, effect, outcome);
+            applyEffect(this.gameState, effect, outcome, this);
         });
         this.gameState.setState({});
     }
@@ -478,7 +478,8 @@ export class SimulationService {
     _getActiveShip() {
         const state = this.gameState;
         const activeId = state.player.activeShipId;
-        return { id: activeId, ...SHIPS[activeId], ...state.player.shipStates[activeId] };
+        const shipState = state.player.shipStates[activeId];
+        return { id: activeId, ...SHIPS[activeId], ...shipState };
     }
 
     _getActiveInventory() {
