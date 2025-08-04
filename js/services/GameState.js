@@ -108,7 +108,7 @@ export class GameState {
             }
         };
 
-        COMMODITIES.forEach(c => { initialState.player.inventories.starter[c.id] = { quantity: 0, avgCost: 0 }; });
+        COMMODITIES.forEach(c => { initialState.player.inventories[SHIP_IDS.WANDERER][c.id] = { quantity: 0, avgCost: 0 }; });
         MARKETS.forEach(m => {
             initialState.market.priceHistory[m.id] = {};
             initialState.intel.available[m.id] = (Math.random() < 0.3); // Using literal instead of CONFIG for now

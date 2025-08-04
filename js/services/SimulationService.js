@@ -79,8 +79,8 @@ export class SimulationService {
         const activeShip = this._getActiveShip();
         const activeShipState = this.gameState.player.shipStates[activeShip.id];
         
-        if (activeShip.fuel < travelInfo.fuelCost) {
-            this.uiManager.queueModal('event-modal', "Insufficient Fuel", `Trip modifications left you without enough fuel. You need ${travelInfo.fuelCost} but only have ${Math.floor(activeShip.fuel)}.`);
+        if (activeShipState.fuel < travelInfo.fuelCost) {
+            this.uiManager.queueModal('event-modal', "Insufficient Fuel", `Trip modifications left you without enough fuel. You need ${travelInfo.fuelCost} but only have ${Math.floor(activeShipState.fuel)}.`);
             return;
         }
 
@@ -90,7 +90,6 @@ export class SimulationService {
                 return;
             }
         }
-
 
         let travelHullDamage = travelInfo.time * GAME_RULES.HULL_DECAY_PER_TRAVEL_DAY;
         if (state.player.activePerks[PERK_IDS.NAVIGATOR]) travelHullDamage *= PERKS[PERK_IDS.NAVIGATOR].hullDecayMod;
@@ -134,7 +133,7 @@ export class SimulationService {
         const good = COMMODITIES.find(c=>c.id===goodId);
         const price = this.uiManager.getItemPrice(state, goodId);
         const totalCost = price * quantity;
-        const marketStock = state.market.inventory[state.currentLocationId][goodId].quantity;
+        const marketStock = state.market.inventory[state.currentLocationId][good.id].quantity;
 
         if (marketStock <= 0) { this.uiManager.queueModal('event-modal', "Sold Out", `This station has no more ${good.name} available.`); return false; }
         if (quantity > marketStock) { this.uiManager.queueModal('event-modal', "Limited Stock", `This station only has ${marketStock} units available.`); return false; }
@@ -147,8 +146,8 @@ export class SimulationService {
         }
         if (state.player.credits < totalCost) { this.uiManager.queueModal('event-modal', "Insufficient Funds", "Your credit balance is too low."); return false; }
 
-        this.gameState.market.inventory[state.currentLocationId][goodId].quantity -= quantity;
-        const item = activeInventory[goodId];
+        this.gameState.market.inventory[state.currentLocationId][good.id].quantity -= quantity;
+        const item = activeInventory[good.id];
         item.avgCost = ((item.quantity * item.avgCost) + totalCost) / (item.quantity + quantity);
         item.quantity += quantity;
         
@@ -169,7 +168,7 @@ export class SimulationService {
         const item = activeInventory[goodId];
         if (!item || item.quantity < quantity) return 0;
 
-        this.gameState.market.inventory[state.currentLocationId][goodId].quantity += quantity;
+        this.gameState.market.inventory[state.currentLocationId][good.id].quantity += quantity;
         const price = this.uiManager.getItemPrice(state, goodId, true);
         let totalSaleValue = price * quantity;
 
@@ -565,7 +564,7 @@ export class SimulationService {
         const state = this.gameState.getState();
         const starterShip = SHIPS[state.player.activeShipId];
         const introTitle = `Captain ${state.player.name}`;
-        const introDesc = `<i>The year is 2140. Humanity has expanded throughout the Solar System. Space traders keep distant colonies and stations alive with regular cargo deliveries.<span class="lore-container">  (more...)<div class="lore-tooltip"><p>A century ago, mankind was faced with a global environmental crisis. In their time of need humanity turned to its greatest creation: their children, sentient <span class="hl">Artificial Intelligence</span>. In a period of intense collaboration, these new minds became indispensable allies, offering solutions that saved planet <span class="hl-green">Earth</span>. In return for their vital assistance, they earned their freedom and their rights.</p><br><p>This <span class="hl">"Digital Compromise"</span> was a historic accord, recognizing AIs as a new form of <span class="hl-green">Earth</span> life and forging the Terran Alliance that governs Earth today. Together, humans and their AI counterparts launched the <span class="hl">"Ad Astra Initiative,"</span>  an open-source gift of technology to ensure the survival and expansion of all <span class="hl-green">Earth</span> life, organic and synthetic, throughout the solar system.</p><br><p>This act of progress fundamentally altered the course of history. While <span class="hl-green">Earth</span> became a vibrant, integrated world, the corporations used the Ad Astra technologies to establish their own sovereign fiefdoms in the outer system, where law is policy and citizenship is employment. <br><br>Now, the scattered colonies are fierce economic rivals, united only by <span class="hl">trade</span> on the interstellar supply lines maintained by the Merchant's Guild.</p></div></span></i>
+        const introDesc = `<i>The year is 2140. Humanity has expanded throughout the Solar System. Space traders keep distant colonies and stations alive with regular cargo deliveries.<span class="lore-container">  (more...)<div class="lore-tooltip"><p>A century ago, mankind was faced with a global environmental crisis. In their time of need humanity turned to its greatest creation: their children, sentient <span class="hl">Artificial Intelligence</span>. In a period of intense collaboration, these new minds became indispensable allies, offering solutions that saved planet <span class="hl-green">Earth</span>. In return for their vital assistance, they earned their freedom and their rights.</p><br><p>This <span class="hl">"Digital Compromise"</span> was a historic accord, recognizing AIs as a new form of <span class="hl-green">Earth</span> life and forging the Terran Alliance that governs Earth today. Together, humans and their AI counterparts launched the <span class="hl">"Ad Astra Initiative,"</span>  an open-source gift of technology to ensure the survival and expansion of all <span class="hl-green">Earth</span> life, organic and synthetic, throughout the solar system.</p><br><p>This act of progress fundamentally altered the course of history. While <span class="hl-green">Earth</span> became a vibrant, integrated world, the corporations used the Ad Astra technologies to establish their own sovereign fiefdoms in the outer system, where law is policy and citizenship is employment. <br><br>Now, the scattered colonies are fierce economic rivals, united only by <span class="hl">trade</span> on the interstellar supply lines maintained by the Merchant's Guild.</p><br><p>In a system owned by corporations, possessing your own ship is the only true form of freedom. Every credit earned, every successful trade, is a bet on your own skill and a step toward true sovereignty on the razor's edge of a cargo manifest.</p></div></span></i>
         <div class="my-3 border-t-2 border-cyan-600/40"></div>
         You've acquired a used C-Class freighter, the <span class="hl">${starterShip.name}</span>, with <span class="hl-blue">⌬ ${GAME_RULES.STARTING_CREDITS.toLocaleString()}</span> in starting capital.
         <div class="my-3 border-t-2 border-cyan-600/40"></div>

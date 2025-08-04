@@ -645,7 +645,7 @@ export class UIManager {
         let price = gameState.market.prices[gameState.currentLocationId][goodId];
         const market = MARKETS.find(m => m.id === gameState.currentLocationId);
         if (isSelling && market.specialDemand && market.specialDemand[goodId]) {
-            price *= market.specialDemand[goodId].bonus;
+            price *= market.specialDemand[good.id].bonus;
         }
         const intel = gameState.intel.active;
         if (intel && intel.targetMarketId === gameState.currentLocationId && intel.commodityId === goodId) {
