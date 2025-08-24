@@ -378,8 +378,6 @@ body {
 .loan-btn-tooltip[data-tooltip]:hover::after {
     content: attr(data-tooltip);
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     background-color: #111827;
     color: #fff;
     padding: 5px 10px;
@@ -394,19 +392,12 @@ body {
     display: block; 
     pointer-events: none;
     font-family: 'Exo 2', sans-serif;
+    left: 105%;
+    top: 50%;
+    transform: translateY(-50%);
 }
 .loan-btn-tooltip[data-tooltip]:hover::after {
     font-family: 'Roboto Mono', monospace;
-}
-
-.tooltip-container[data-tooltip]:hover::after,
-.cargo-item-tooltip[data-tooltip]:hover::after,
-.commodity-name-tooltip[data-tooltip]:hover::after,
-.hanger-ship-name[data-tooltip]:hover::after,
-.tooltip-active::after,
-.loan-btn-tooltip[data-tooltip]:hover::after {
-    bottom: 100%;
-    margin-bottom: 5px;
 }
 
 .tooltip-container-below[data-tooltip]:hover::after {
