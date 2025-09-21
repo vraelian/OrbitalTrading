@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Orbital Trading 26.10</title>
@@ -23,7 +24,7 @@
     
     
     
-    <link rel="stylesheet" href="style.css?v=1758424658396">
+    <link rel="stylesheet" href="style.css?v=1758472846563">
 </head>
 <body>
 
@@ -220,6 +221,17 @@
     
     <div id="tutorial-highlight-overlay" class="hidden"></div>
 
-    <script src="bundle.min.js?v=1758424658406"></script>
+    <script src="bundle.min.js?v=1758472846575"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
