@@ -27,7 +27,13 @@
     
     
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1759507353447">
+    <script>
+        // iOS PWA detection script
+        if (window.navigator.standalone) {
+            document.documentElement.classList.add('is-ios-pwa');
+        }
+    </script>
+    <link rel="stylesheet" href="style.css?v=1759508826869">
 </head>
 <body>
 
@@ -246,7 +252,7 @@
         </div>
     </div>
 
-    <script src="bundle.min.js?v=1759507353458"></script>
+    <script src="bundle.min.js?v=1759508826880"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
