@@ -27,7 +27,7 @@
     
     
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1759506143685">
+    <link rel="stylesheet" href="style.css?v=1759507353447">
 </head>
 <body>
 
@@ -225,7 +225,28 @@
     <div id="tutorial-highlight-overlay" class="hidden"></div>
     <div id="orientation-overlay">Please rotate your device to portrait mode.</div>
 
-    <script src="bundle.min.js?v=1759506143696"></script>
+    <div id="diagnostic-overlay" class="hidden">
+        <div class="diag-section">
+            <p><strong>Viewport:</strong> <span id="diag-window-w"></span>x<span id="diag-window-h"></span></p>
+            <p><strong>Game Cont:</strong> <span id="diag-game-container-w"></span>x<span id="diag-game-container-h"></span></p>
+            <p><strong>Body:</strong> <span id="diag-body-w"></span>x<span id="diag-body-h"></span></p>
+        </div>
+        <div class="diag-section">
+            <p><strong>Pixel Ratio:</strong> <span id="diag-pixel-ratio"></span></p>
+            <p><strong>Display Mode:</strong> <span id="diag-display-mode"></span></p>
+            <p><strong>User Agent:</strong> <span id="diag-user-agent"></span></p>
+        </div>
+        <div class="diag-section">
+            <p><strong>Day:</strong> <span id="diag-day"></span></p>
+            <p><strong>Nav/Screen:</strong> <span id="diag-nav-screen"></span></p>
+        </div>
+        <div class="diag-section">
+            <p><strong>Tutorial Batch:</strong> <span id="diag-tutorial-batch"></span></p>
+            <p><strong>Tutorial Step:</strong> <span id="diag-tutorial-step"></span></p>
+        </div>
+    </div>
+
+    <script src="bundle.min.js?v=1759507353458"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
