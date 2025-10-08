@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Orbital Trading 27.50</title>
+    <title>Orbital Trading 28.00</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.19"></script>
@@ -28,7 +28,7 @@
     
     
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1759639952788">
+    <link rel="stylesheet" href="style.css?v=1759901996450">
 </head>
 <body>
 
@@ -47,7 +47,7 @@
         </div>
 
         <footer class="absolute bottom-4 text-center text-slate-500 text-sm w-full">
-            <p>Version 27.50</p>
+            <p>Version 28.00</p>
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSeVqjUEC6nsZlxTQ9-vzz0_fHO0ng8w0AueZaGzkHPoLJIBDA/viewform?usp=header" target="_blank" class="hover:text-cyan-300 transition-colors"><span class="hl">Submit Playtesting Feedback</span></a>
         </footer>
     </div>
@@ -70,7 +70,7 @@
         
         <div class="main-content-wrapper px-4 md:px-8 pb-4 md:pb-8">
             <div id="main-content">
-                <div id="status-screen" class="screen"></div>
+                <div id="map-screen" class="screen"></div>
                 <div id="navigation-screen" class="screen"></div>
                 <div id="services-screen" class="screen"></div>
                
@@ -99,6 +99,13 @@
                 <div id="mission-modal-buttons" class="mt-4"></div>
             </div>
         </div>
+        <div id="map-detail-modal" class="modal-backdrop hidden">
+             <div class="modal-content">
+                <button class="absolute top-4 right-4 text-2xl font-bold opacity-70 hover:opacity-100" data-action="close-map-modal">&times;</button>
+                <div id="map-modal-content-container">
+                    </div>
+             </div>
+        </div>
     </main>
     <div id="mission-sticky-bar" class="bottom-sticky-bar">
         <div class="sticky-content sci-fi-frame">
@@ -116,7 +123,7 @@
             <canvas id="travel-canvas"></canvas>
             <div id="travel-footer-panel">
                 <div id="travel-progress-container" class="w-full bg-slate-700 rounded-full h-1.5">
-                    <div id="travel-progress-bar" class="bg-cyan-400 h-1.5 rounded-full" style="width: 0%"></div>
+                    <div id="travel-progress-bar" class="h-1.5 rounded-full" style="width: 0%"></div>
                 </div>
                 <div id="travel-readout-container" class="hidden">
                     <p id="travel-info-text" class="text-base font-roboto-mono"></p>
@@ -247,7 +254,7 @@
         </div>
     </div>
 
-    <script src="bundle.min.js?v=1759639952798"></script>
+    <script src="bundle.min.js?v=1759901996505"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
