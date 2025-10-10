@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Orbital Trading 27.30</title>
+    <title>Orbital Trading 28.01E</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.19"></script>
@@ -26,8 +26,9 @@
     
     
     
+    
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1760059198713">
+    <link rel="stylesheet" href="style.css?v=1760072320861">
 </head>
 <body>
 
@@ -46,7 +47,7 @@
         </div>
 
         <footer class="absolute bottom-4 text-center text-slate-500 text-sm w-full">
-            <p>Version 27.30</p>
+            <p>Version 28.01E</p>
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSeVqjUEC6nsZlxTQ9-vzz0_fHO0ng8w0AueZaGzkHPoLJIBDA/viewform?usp=header" target="_blank" class="hover:text-cyan-300 transition-colors"><span class="hl">Submit Playtesting Feedback</span></a>
         </footer>
     </div>
@@ -69,7 +70,7 @@
         
         <div class="main-content-wrapper px-4 md:px-8 pb-4 md:pb-8">
             <div id="main-content">
-                <div id="status-screen" class="screen"></div>
+                <div id="map-screen" class="screen"></div>
                 <div id="navigation-screen" class="screen"></div>
                 <div id="services-screen" class="screen"></div>
                
@@ -98,6 +99,13 @@
                 <div id="mission-modal-buttons" class="mt-4"></div>
             </div>
         </div>
+        <div id="map-detail-modal" class="modal-backdrop hidden">
+             <div class="modal-content">
+                <button class="absolute top-4 right-4 text-2xl font-bold opacity-70 hover:opacity-100" data-action="close-map-modal">&times;</button>
+                <div id="map-modal-content-container">
+                    </div>
+             </div>
+        </div>
     </main>
     <div id="mission-sticky-bar" class="bottom-sticky-bar">
         <div class="sticky-content sci-fi-frame">
@@ -114,8 +122,8 @@
             </div>
             <canvas id="travel-canvas"></canvas>
             <div id="travel-footer-panel">
-                <div id="travel-progress-container" class="w-full bg-slate-700 rounded-full h-1.5">
-                    <div id="travel-progress-bar" class="bg-cyan-400 h-1.5 rounded-full" style="width: 0%"></div>
+                <div id="travel-progress-container" class="w-full bg-slate-700 rounded-full h-1.5 my-4">
+                    <div id="travel-progress-bar" class="h-1.5 rounded-full" style="width: 0%"></div>
                 </div>
                 <div id="travel-readout-container" class="hidden">
                     <p id="travel-info-text" class="text-base font-roboto-mono"></p>
@@ -136,7 +144,7 @@
 
     <div id="event-modal" class="modal-backdrop hidden">
         <div class="modal-content">
-            <h3 id="event-title" class="text-2xl font-orbitron mb-4 text-cyan-300"></h3>
+            <h3 id="event-title" class="text-2xl font-orbitron mb-4 text-cyan-300 text-center"></h3>
             <p id="event-description" class="mb-6 text-lg"></p>
             <div id="event-button-container" class="mt-6 flex justify-center gap-4"></div>
         </div>
@@ -144,7 +152,7 @@
 
     <div id="charter-modal" class="modal-backdrop hidden modal-theme-gold">
         <div class="modal-content">
-            <h3 id="charter-title" class="text-2xl font-orbitron mb-4 text-gray-300"></h3>
+            <h3 id="charter-title" class="text-2xl font-orbitron mb-4 text-gray-300 text-center"></h3>
             <div id="charter-description" class="mb-6 text-lg"></div>
             <div id="charter-button-container" class="mt-6 flex justify-center gap-4"></div>
         </div>
@@ -152,9 +160,9 @@
 
     <div id="signature-modal" class="modal-backdrop hidden modal-theme-gold">
         <div class="modal-content">
-            <h3 id="signature-title" class="text-2xl font-orbitron mb-4 text-gray-300"></h3>
+            <h3 id="signature-title" class="text-2xl font-orbitron mb-4 text-gray-300 text-center"></h3>
             <div id="signature-description" class="mb-6 text-lg"></div>
-            <input type="text" id="signature-input" maxlength="18" class="w-full p-2 rounded text-center text-lg mb-4 text-gray-200" placeholder="INPUT YOUR NAME...">
+            <input type="text" id="signature-input" maxlength="18" class="w-full p-2 rounded bg-slate-900 border border-slate-600 text-center text-lg mb-4 text-gray-200" placeholder="INPUT YOUR NAME...">
             <div id="signature-button-container" class="mt-6 flex justify-center gap-4"></div>
         </div>
     </div>
@@ -210,7 +218,7 @@
     </div>
 
     <div id="launch-modal" class="modal-backdrop hidden">
-        <div id="launch-modal-content">
+        <div id="launch-modal-content" class="modal-content">
             </div>
     </div>
 
@@ -246,7 +254,8 @@
         </div>
     </div>
 
-    <script src="bundle.min.js?v=1760059198724"></script>
+    <div id="effects-root"></div>
+    <script src="bundle.min.js?v=1760072320875"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
