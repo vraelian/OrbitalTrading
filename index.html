@@ -20,7 +20,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Orbital Trading 29.30</title>
+    <title>Orbital Trading 30.00</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.19"></script>
@@ -41,7 +41,7 @@
     
     
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1760673519473">
+    <link rel="stylesheet" href="style.css?v=1761014011972">
 </head>
 <body>
 
@@ -61,7 +61,7 @@
         </div>
 
         <footer class="absolute bottom-4 text-center text-slate-500 text-sm w-full">
-            <p>Version 29.30</p>
+            <p>Version 30.00</p>
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSeVqjUEC6nsZlxTQ9-vzz0_fHO0ng8w0AueZaGzkHPoLJIBDA/viewform?usp=header" target="_blank" class="hover:text-cyan-300 transition-colors"><span class="hl">Submit Playtesting Feedback</span></a>
         </footer>
     </div>
@@ -165,7 +165,7 @@
 
     <div id="charter-modal" class="modal-backdrop hidden modal-theme-gold">
         <div class="modal-content">
-            <h3 id="charter-title" class="text-2xl font-orbitron mb-4 text-gray-300 text-center"></h3>
+            <h3 id="charter-title" class-"text-2xl font-orbitron mb-4 text-gray-300 text-center"></h3>
             <div id="charter-description" class="mb-6 text-lg"></div>
             <div id="charter-button-container" class="mt-6 flex justify-center gap-4"></div>
         </div>
@@ -206,13 +206,16 @@
         </div>
     </div>
 
+    <div id="tutorial-anchor-overlay" class="fixed inset-0 z-30 pointer-events-none"></div>
+
     <div id="tutorial-toast-container" class="hidden fixed z-40 p-4 rounded-lg shadow-2xl transition-all duration-300 pointer-events-auto">
-        <button id="tutorial-toast-skip-btn" class="absolute top-1 right-2 text-2xl font-bold opacity-70 hover:opacity-1.01">×</button>
-        <p id="tutorial-toast-text" class="text-lg pr-6"></p>
-        <div class="mt-3 text-right">
-            <button id="tutorial-toast-next-btn" class="btn btn-sm">Next →</button>
+        <div id="tt-arrow" data-popper-arrow></div>
+        <div class="tt-controls-container">
+            <button id="tutorial-toast-skip-btn" class="absolute top-1 right-2 text-2xl font-bold opacity-70 hover:opacity-1.01">×</button>
+            <button id="tutorial-toast-next-btn" class="tt-next-arrow hidden">›</button>
         </div>
-     </div>
+        <p id="tutorial-toast-text" class="text-lg pr-6"></p>
+        </div>
     
     <div id="skip-tutorial-modal" class="modal-backdrop hidden">
          <div class="modal-content">
@@ -267,10 +270,11 @@
         </div>
     </div>
 
-    <script src="bundle.min.js?v=1760673519524"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="bundle.min.js?v=1761014011985"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
+            window.addEventListener('load', () => { // Corrected arrow function syntax
                 navigator.serviceWorker.register('./sw.js').then(registration => {
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
                 }, err => {
