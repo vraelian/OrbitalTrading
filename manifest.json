@@ -1,0 +1,16 @@
+{
+  "name": "Orbital Trading",
+  "short_name": "Orbital",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0c101d",
+  "theme_color": "#0c101d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
