@@ -1,9 +1,10 @@
+// sw.js
 /**
  * @fileoverview Service Worker for Orbital Trading PWA.
  * Handles local caching of core assets to enable offline playability and rapid subsequent load times.
  */
 
-const CACHE_NAME = 'orbital-trading-v1';
+const CACHE_NAME = 'orbital-trading-1777645844615';
 
 const ASSETS_TO_CACHE = [
     '/',
@@ -20,8 +21,17 @@ const ASSETS_TO_CACHE = [
  */
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(ASSETS_TO_CACHE))
+        caches.open(CACHE_NAME).then((cache) => {
+            // Use Promise.allSettled to gracefully install even if some dist/ assets are missing in dev environments
+            return Promise.allSettled(
+                ASSETS_TO_CACHE.map(asset => 
+                    fetch(asset).then(response => {
+                        if (!response.ok) throw new Error(`Failed to fetch ${asset}`);
+                        return cache.put(asset, response);
+                    })
+                )
+            );
+        })
     );
 });
 
