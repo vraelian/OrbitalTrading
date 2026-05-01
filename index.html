@@ -38,8 +38,9 @@
     
     
     
+    
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1777250667212">
+    <link rel="stylesheet" href="style.css?v=1777608857191">
 </head>
 <body>
 
@@ -169,6 +170,12 @@
                 <div id="intel-screen" class="screen"></div>
             </div>
         </div>
+
+        <button id="btn-achievements" class="hidden" title="Achievements" data-action="open-achievements">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-400">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+        </button>
 
         <button id="btn-econ-weather" class="hidden" title="Economic Weather" data-action="show_econ_weather">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -355,6 +362,15 @@
         </div>
     </div>
 
+    <div id="achievements-modal" class="modal-backdrop hidden z-[1050]">
+        <div class="modal-content relative flex flex-col p-4 md:p-6" style="height: 85vh; width: 95%; max-width: 600px;">
+            <button type="button" id="achievements-dismiss-btn" class="absolute top-2 right-4 text-gray-400 hover:text-white text-4xl font-bold leading-none cursor-pointer transition-colors z-50 p-2 touch-manipulation" data-action="close-achievements" title="Close Modal">&minus;</button>
+            <h2 class="text-3xl font-orbitron font-bold text-center text-cyan-300 mb-4 tracking-widest">AWARDS</h2>
+            <div id="achievements-scroll-container" class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                </div>
+        </div>
+    </div>
+
     <div id="graph-tooltip"></div>
     <div id="generic-tooltip" class="generic-tooltip"></div>
     
@@ -377,7 +393,7 @@
         </div>
     </div>
 
-    <script src="bundle.min.js?v=1777250667248"></script>
+    <script src="bundle.min.js?v=1777608857219"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { 
