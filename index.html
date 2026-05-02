@@ -42,7 +42,7 @@
     
     
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1777730123632">
+    <link rel="stylesheet" href="style.css?v=1777731016989">
 </head>
 <body>
 
@@ -396,7 +396,7 @@
         </div>
     </div>
 
-    <script src="bundle.min.js?v=1777730123659"></script>
+    <script src="bundle.min.js?v=1777731017018"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { 
@@ -411,16 +411,19 @@
 
     <script>
         // PWA Notch/Status Bar Sync (Ignored completely by Native iOS WKWebView)
-        // Keeps the browser's status bar meta tag synchronized with the active location theme seamlessly
+        // Keeps the browser's status bar and bottom home indicator synchronized with the active location theme
         const syncThemeColor = () => {
             const rootStyle = getComputedStyle(document.documentElement);
             const bgBase = rootStyle.getPropertyValue('--ui-bg-base').trim() || 
-                           getComputedStyle(document.body).getPropertyValue('--ui-bg-base').trim();
+                           getComputedStyle(document.body).getPropertyValue('--ui-bg-base').trim() || '#0c101d';
+            
             if (bgBase) {
                 let themeMeta = document.querySelector('meta[name="theme-color"]');
                 if (themeMeta && themeMeta.content !== bgBase) {
                     themeMeta.setAttribute('content', bgBase);
                 }
+                document.documentElement.style.backgroundColor = bgBase;
+                document.body.style.backgroundColor = bgBase;
             }
         };
 
