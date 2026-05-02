@@ -40,7 +40,7 @@
     
     
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=1777645844166">
+    <link rel="stylesheet" href="style.css?v=1777692573444">
 </head>
 <body>
 
@@ -172,7 +172,7 @@
         </div>
 
         <button id="btn-achievements" class="hidden" title="Achievements" data-action="open-achievements">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-400">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
         </button>
@@ -184,8 +184,8 @@
             </svg>
         </button>
 
-        <button id="btn-game-menu" class="fixed bottom-[35px] right-0 z-[800] w-11 h-11 flex items-center justify-center shadow-[0_0_10px_rgba(0,0,0,0.5)]" data-action="open-pause-menu" title="Game Menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+        <button id="btn-game-menu" style="display: none;" data-action="open-pause-menu" title="Game Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
@@ -212,6 +212,7 @@
              </div>
         </div>
     </main>
+    
     <div id="mission-sticky-bar" class="bottom-sticky-bar cursor-pointer" data-action="set-screen" data-nav-id="data" data-screen-id="missions">
         <div class="sticky-content">
             <p id="sticky-objective-text"></p>
@@ -393,7 +394,7 @@
         </div>
     </div>
 
-    <script src="bundle.min.js?v=1777645844196"></script>
+    <script src="bundle.min.js?v=1777692573475"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { 
