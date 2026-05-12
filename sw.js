@@ -4,7 +4,7 @@
  * Handles local caching of core assets to enable offline playability and rapid subsequent load times.
  */
 
-const CACHE_NAME = 'orbital-trading-1778393552509';
+const CACHE_NAME = 'orbital-trading-1778553687049';
 
 const ASSETS_TO_CACHE = [
     '/',
